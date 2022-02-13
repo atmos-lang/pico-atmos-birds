@@ -23,7 +23,7 @@ var bird = task [_int,_int] -> () -> () { -- arg = [y,speed]
     var xx: _float = rct.1
     var yy: _float = rct.2
     loop {
-        await _1
+        await evt?UTimeout
 
         var v: _float = _(100 * $speed)
         set xx = _( $xx + $v/1000 )
@@ -44,9 +44,9 @@ var b1 = spawn bird [_100, _100]
 var b2 = spawn bird [_200, _200]
 
 loop {
-    var e: TEvent = input pico <.UEvent_Timeout [_SDL_ANY,_100]>: TPico
+    var e: Event = input pico <.UEvent_Timeout [_SDL_ANY,_100]>: TPico
     --output std /e
     output pico <.UClear>: TPico
-    bcast @GLOBAL _(${e}.tag)
+    emit e
     output pico <.UPresent>: TPico
 }
