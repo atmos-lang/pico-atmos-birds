@@ -2,12 +2,13 @@
 
 #define PI 3.14
 
-output pico <.USet_Title _("Birds - 01 (task/await)")>: TPico
+output pico <.USet_Title _("Birds - 01 (task)")>: TPico
 output pico <.USet_Size [_640,_480]>: TPico
 output pico <.USet_Zoom [_100,_100]>: TPico
 output pico <.USet_Grid _0>: TPico
 output pico <.USet_Color_Clear [_0,_0,_0,_255]>: TPico
 output pico <.UClear>: TPico
+output pico <.USet_Auto _0>: TPico
 
 var win: [_int,_int]
 output pico <.UGet_Size /win>: TPico
@@ -44,7 +45,8 @@ var b2 = spawn bird [_200, _200]
 
 loop {
     var e: TEvent = input pico <.UEvent_Timeout [_SDL_ANY,_100]>: TPico
-    output pico <.UClear>: TPico
     --output std /e
+    output pico <.UClear>: TPico
     bcast @GLOBAL _(${e}.tag)
+    output pico <.UPresent>: TPico
 }
