@@ -1,52 +1,67 @@
+#include "int.ce"
+#include "float.ce"
 #include "pico.ce"
 
 #define PI 3.14
 
-output pico <.USet_Title _("Birds - 01 (task)")>: TPico
-output pico <.USet_Size [_640,_480]>: TPico
-output pico <.USet_Zoom [_100,_100]>: TPico
-output pico <.USet_Grid _0>: TPico
-output pico <.USet_Color_Clear [_0,_0,_0,_255]>: TPico
-output pico <.UClear>: TPico
-output pico <.USet_Auto _0>: TPico
+output pico TPico.USet_Title _("Birds - 01 (task)")
+output pico TPico.USet_Size [_640,_480]
+output pico TPico.USet_Zoom [_100,_100]
+output pico TPico.USet_Grid _0
+output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
+output pico TPico.UClear
+output pico TPico.USet_Auto _0
 
-var win: [_int,_int]
-output pico <.UGet_Size /win>: TPico
+var win: Dims
+output pico TPico.UGet_Size /win
 
 --type Bird = task [_int,_int] -> () -> ()
 
 var bird = task [_int,_int] -> () -> () { -- arg = [y,speed]
     var speed = arg.2
-    var rct: [_int,_int,_int,_int] = [_(-${win}._1/2),arg.1, _50,_45]
+    var rct: Rect = [[x,arg.1], [_50,_45]]
+        where {
+            var x: _int = div [umn win.1, _2]
+        }
     var sin: _float = _0
 
-    var xx: _float = rct.1
-    var yy: _float = rct.2
-    loop {
-        await evt?UTimeout
+    par {
+        var xx: _float = rct.1.1
+        var yy: _float = rct.1.2
+        loop {
+            await evt?UTimeout
 
-        var v: _float = _(100 * $speed)
-        set xx = _( $xx + $v/1000 )
---native _(printf(">>> %f\\n", $xx);)
-        set rct.1 = xx
-        set rct.2 = _( $yy + $speed/5*sin($sin) )
-        set sin = _( $sin + PI*$v/100000 )
-
-        if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
-            output pico <.UDraw_Image [[rct.1,rct.2], _("res/clumsy_up.png")]>: TPico
-        } else {
-            output pico <.UDraw_Image [[rct.1,rct.2], _("res/clumsy_dn.png")]>: TPico
+            var xspeed = speed
+            var v: _float = mul [_100,speed]
+            set xx = fadd [xx, fdiv [v,_1000]]
+            set rct.1 = [x,y]
+                where {
+                    var x: _int = f2int xx
+                    var xsin = sin
+                    var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($xsin))]]
+                }
+            set sin = fadd [sin, _(PI*$v/100000)]
+        }
+    } with {
+        loop {
+            await evt?UTimeout
+            var xsin = sin
+            if _( ((int)(($xsin+PI/2)/PI)) % 2 == 0 ) {
+                output pico TPico.UDraw_Image [rct.1, _("res/clumsy_up.png")]
+            } else {
+                output pico TPico.UDraw_Image [rct.1, _("res/clumsy_dn.png")]
+            }
         }
     }
 }
 
-var b1 = spawn bird [_100, _100]
-var b2 = spawn bird [_200, _200]
+spawn bird [_100, _100]
+spawn bird [_300, _200]
 
 loop {
-    var e: Event = input pico <.UEvent_Timeout [_SDL_ANY,_100]>: TPico
+    var e: Event = input pico TPico.UEvent_Timeout [_SDL_ANY,_100]
     --output std /e
-    output pico <.UClear>: TPico
+    output pico TPico.UClear
     emit e
-    output pico <.UPresent>: TPico
+    output pico TPico.UPresent
 }
