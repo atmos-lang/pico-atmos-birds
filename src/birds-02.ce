@@ -28,9 +28,7 @@ var bird = task [_int,_int] -> () -> () { -- arg = [y,speed]
     par {
         var xx: _float = rct.1.1
         var yy: _float = rct.1.2
-        loop {
-            await evt?UTimeout
-
+        every evt?UTimeout {
             var xspeed = speed
             var v: _float = mul [_100,speed]
             set xx = fadd [xx, fdiv [v,_1000]]
