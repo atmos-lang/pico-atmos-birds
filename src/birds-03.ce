@@ -15,9 +15,9 @@ output pico TPico.USet_Auto _0
 var win: Dims
 output pico TPico.UGet_Size /win
 
---type Bird = task [_int,_int] -> () -> ()
+type Bird = task [_int,_int] -> () -> ()
 
-var bird = task [_int,_int] -> () -> () { -- arg = [y,speed]
+var bird = Bird {       -- arg = [y,speed]
     var speed = arg.2
     var rct: Rect = [[x,arg.1], [_50,_45]]
         where {
@@ -53,7 +53,7 @@ var bird = task [_int,_int] -> () -> () { -- arg = [y,speed]
     }
 }
 
-var birds: active tasks [_int,_int] -> () -> ()
+var birds: active {} Bird
 var i: _int = _1
 loop {
     spawn bird [y,s] in birds
