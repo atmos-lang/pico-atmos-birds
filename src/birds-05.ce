@@ -28,9 +28,9 @@ var bird = Bird {       -- arg = [y,speed]
     paror {
         var xx: _float = rct.1.1
         var yy: _float = rct.1.2
-        every evt?UTimeout {
+        every evt?UFrame {
             var xspeed = speed
-            var v: _float = mul [_100,speed]
+            var v: _float = mul [evt!UFrame,speed]
             set xx = fadd [xx, fdiv [v,_1000]]
             set rct.1 = [x,y]
                 where {
@@ -45,7 +45,7 @@ var bird = Bird {       -- arg = [y,speed]
         }
     } with {
         loop {
-            await evt?UTimeout
+            await evt?UFrame
             var xsin = sin
             if _( ((int)(($xsin+PI/2)/PI)) % 2 == 0 ) {
                 output pico TPico.UDraw_Image [rct.1, _("res/clumsy_up.png")]
@@ -69,10 +69,4 @@ spawn {
     }
 }
 
-loop {
-    var e: Event = input pico TPico.UEvent_Timeout [_SDL_ANY,_100]
-    --output std /e
-    output pico TPico.UClear
-    emit e
-    output pico TPico.UPresent
-}
+call pico_loop ()
