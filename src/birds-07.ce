@@ -38,16 +38,14 @@ var bird = Bird {       -- arg = [y,speed]
                     if gt [x,_320] {
                         break
                     }
-                    var xsin = sin
-                    var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($xsin))]]
+                    var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
                 }
             set sin = fadd [sin, _(PI*$v/100000)]
         }
     } with {
         loop {
             await evt?UFrame
-            var xsin = sin
-            if _( ((int)(($xsin+PI/2)/PI)) % 2 == 0 ) {
+            if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
                 output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
             } else {
                 output pico TPico.UDraw_Image [pub.1, _("res/clumsy_dn.png")]
