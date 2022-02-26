@@ -56,8 +56,7 @@ var bird = Bird {       -- arg = [y,speed]
 spawn {
     var birds: active {5} Bird
     var i: _int = _1
-    loop {
-        await evt?UMouseButtonDown      -- TODO: await 1s
+    every 1s {
         spawn bird [y,s] in birds
             where {
                 var y = sub [rem [_(rand()),_480], _240]
