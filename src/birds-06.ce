@@ -1,0 +1,74 @@
+#include "int.ce"
+#include "float.ce"
+#include "pico.ce"
+
+#define PI 3.14
+
+output pico TPico.USet_Title _("Birds - 06 (pool/scope)")
+output pico TPico.USet_Size [_640,_480]
+output pico TPico.USet_Zoom [_100,_100]
+output pico TPico.USet_Grid _0
+output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
+output pico TPico.UClear
+output pico TPico.USet_Auto _0
+
+var win: Dims
+output pico TPico.UGet_Size /win
+
+type Bird = task [_int,_int] -> () -> ()
+
+var bird = Bird {       -- arg = [y,speed]
+    var speed = arg.2
+    var rct: Rect = [[x,arg.1], [_50,_45]]
+        where {
+            var x: _int = div [umn win.1, _2]
+        }
+    var sin: _float = _0
+
+    paror {
+        var xx: _float = rct.1.1
+        var yy: _float = rct.1.2
+        every evt?UFrame {
+            var xspeed = speed
+            var v: _float = mul [evt!UFrame,speed]
+            set xx = fadd [xx, fdiv [v,_1000]]
+            set rct.1 = [x,y]
+                where {
+                    var x: _int = f2int xx
+                    if gt [x,_320] {
+                        break
+                    }
+                    var xsin = sin
+                    var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($xsin))]]
+                }
+            set sin = fadd [sin, _(PI*$v/100000)]
+        }
+    } with {
+        loop {
+            await evt?UFrame
+            var xsin = sin
+            if _( ((int)(($xsin+PI/2)/PI)) % 2 == 0 ) {
+                output pico TPico.UDraw_Image [rct.1, _("res/clumsy_up.png")]
+            } else {
+                output pico TPico.UDraw_Image [rct.1, _("res/clumsy_dn.png")]
+            }
+        }
+    }
+}
+
+spawn {
+    loop {
+        watching evt?UMouseButtonDown {
+            var birds: active {5} Bird
+            every 1s {
+                spawn bird [y,s] in birds
+                    where {
+                        var y = sub [rem [_(rand()),_480], _240]
+                        var s = add [_100, rem [_(rand()),_100]]
+                    }
+            }
+        }
+    }
+}
+
+call pico_loop ()
