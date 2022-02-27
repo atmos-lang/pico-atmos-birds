@@ -25,30 +25,60 @@ var bird = Bird {       -- arg = [y,speed]
         }
     var sin: _float = _0
 
-    paror {
-        var xx: _float = pub.1.1
-        var yy: _float = pub.1.2
-        every evt?UFrame {
-            var xspeed = speed
-            var v: _float = mul [evt!UFrame,speed]
-            set xx = fadd [xx, fdiv [v,_1000]]
-            set pub.1 = [x,y]
-                where {
-                    var x: _int = f2int xx
-                    if gt [x,_320] {
-                        break
+    watching evt?UCollided {
+        paror {
+            var xx: _float = pub.1.1
+            var yy: _float = pub.1.2
+            every evt?UFrame {
+                var xspeed = speed
+                var v: _float = mul [evt!UFrame,speed]
+                set xx = fadd [xx, fdiv [v,_1000]]
+                set pub.1 = [x,y]
+                    where {
+                        var x: _int = f2int xx
+                        if gt [x,_320] {
+                            break
+                        }
+                        var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
                     }
-                    var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
+                set sin = fadd [sin, _(PI*$v/100000)]
+            }
+        } with {
+            loop {
+                await evt?UFrame
+                if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
+                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
+                } else {
+                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_dn.png")]
                 }
-            set sin = fadd [sin, _(PI*$v/100000)]
+            }
+        }
+    }
+}
+
+spawn {
+    var birds: active {5} Bird
+    par {
+        every 500ms {
+            spawn bird [y,s] in birds
+                where {
+                    var y = sub [rem [_(rand()),_480], _240]
+                    var s = add [_100, rem [_(rand()),_100]]
+                }
         }
     } with {
-        loop {
-            await evt?UFrame
-            if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
-                output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
-            } else {
-                output pico TPico.UDraw_Image [pub.1, _("res/clumsy_dn.png")]
+        every evt?UFrame {
+            var b1: active Bird
+            loop b1 in birds {
+                var b2: active Bird
+                loop b2 in birds {
+                    if _($b1 != $b2) {
+                        if isRectVsRect [b1.pub,b2.pub] {
+                            emit b1 Event.UCollided
+                            emit b2 Event.UCollided
+                        }
+                    }
+                }
             }
         }
     }
