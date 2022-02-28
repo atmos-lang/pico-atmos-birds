@@ -1,0 +1,424 @@
+-- LOGICAL
+
+var not = func _int -> _int {
+    return _(!$arg)
+}
+
+var and = func [_int,_int] -> _int {
+    return _($arg._1 && $arg._2)
+}
+
+var or = func [_int,_int] -> _int {
+    return _($arg._1 || $arg._2)
+}
+
+-- RELATIONAL
+
+var eq = func [_int,_int] -> _int {
+    return _($arg._1 == $arg._2)
+}
+
+var neq = func [_int,_int] -> _int {
+    return _($arg._1 != $arg._2)
+}
+
+var gt = func [_int,_int] -> _int {
+    return _($arg._1 > $arg._2)
+}
+
+var lt = func [_int,_int] -> _int {
+    return _($arg._1 < $arg._2)
+}
+
+
+var gte = func [_int,_int] -> _int {
+    return _($arg._1 >= $arg._2)
+}
+
+var lte = func [_int,_int] -> _int {
+    return _($arg._1 <= $arg._2)
+}
+
+-- ARITHMETIC
+
+var umn = func _int -> _int {
+    return _(-$arg)
+}
+
+var add = func [_int,_int] -> _int {
+    return _($arg._1 + $arg._2)
+}
+
+var sub = func [_int,_int] -> _int {
+    return _($arg._1 - $arg._2)
+}
+
+var mul = func [_int,_int] -> _int {
+    return _($arg._1 * $arg._2)
+}
+
+var div = func [_int,_int] -> _int {
+    return _($arg._1 / $arg._2)
+}
+
+var rem = func [_int,_int] -> _int {
+    return _($arg._1 % $arg._2)
+}
+var int2f = func _int -> _float {
+    return arg
+}
+
+var f2int = func _float -> _int {
+    return arg
+}
+
+var fadd = func [_float,_float] -> _float {
+    return _($arg._1 + $arg._2)
+}
+
+var fsub = func [_float,_float] -> _float {
+    return _($arg._1 - $arg._2)
+}
+
+var fmul = func [_float,_float] -> _float {
+    return _($arg._1 * $arg._2)
+}
+
+var fdiv = func [_float,_float] -> _float {
+    return _($arg._1 / $arg._2)
+}
+type Point = [_int,_int]
+type Dims  = [_int,_int]
+type Rect  = [Point,Dims]
+
+-- ULeft,   UCenter, URight
+-- UBottom, UMiddle, UTop
+type THAnchor = <(),(),()>
+type TVAnchor = <(),(),()>
+
+type Event = <
+    ()          ,   -- EVENT_KILL
+    _uint64_t   ,   -- EVENT_TASK
+    ()          ,   -- UAny
+    ()          ,   -- UTimeout
+    _int        ,   -- UFrame
+    ()          ,   -- UDraw
+    _int        ,   -- UKeyDown
+    [_int,Point],   -- UMouseButtonDown
+    [_int,Point],   -- UMouseButtonUp
+    [_int,_int],    -- UMouseMotion
+    (),             -- UCollided
+    _int,           -- UPause
+    _int            -- UHide
+>
+
+type TPico = <
+    _int                 , -- UDelay
+    _int                 , -- UEvent
+    [_int,_int]          , -- UEvent_Timeout
+    ()                   , -- UPresent
+    ()                   , -- UClear
+    Point                , -- UDraw_Pixel
+    [Point,Point]        , -- UDraw_Line
+    Rect                 , -- UDraw_Rect
+    [Point,_(char*)]     , -- UDraw_Text
+    [Point,_(char*)]     , -- UDraw_Image
+    /Dims                , -- UGet_Size
+    [THAnchor,TVAnchor]  , -- USet_Anchor
+    ()                   , -- USet_Auto
+    [_int,_int,_int,_int], -- USet_Color_Clear
+    [_int,_int,_int,_int], -- USet_Color_Draw
+    Point                , -- USet_Cursor
+    [_(char*),_int]      , -- USet_Font
+    _int                 , -- USet_Grid
+    Point                , -- USet_Pan
+    Dims                 , -- USet_Size
+    _(char*)             , -- USet_Title
+    Dims                 , -- USet_Zoom
+    _(char*)             , -- UWrite
+    _(char*)               -- UWriteLn 
+>
+
+-- xTPico
+
+-- xEvent
+----
+-- xAnchor
+
+-------------------------------------------------------------------------------
+
+var isPointVsRect = func [Point,Rect] -> _int {
+    return not (or [ lt [mx, sub [rx,rw]],
+                or [ gt [mx, add [rx,rw]],
+                or [ lt [my, sub [ry,rh]],
+                     gt [my, add [ry,rh]]]]])
+        where {
+            var mx = arg.1.1
+            var my = arg.1.2
+            var rx = arg.2.1.1
+            var ry = arg.2.1.2
+            var rw = div [arg.2.2.1, _2]
+            var rh = div [arg.2.2.2, _2]
+        }
+}
+
+var isRectVsRect = func [Rect,Rect] -> _int {
+    return (or [ isPointVsRect [p1,arg.1],
+            or [ isPointVsRect [p2,arg.1],
+            or [ isPointVsRect [p3,arg.1],
+                 isPointVsRect [p4,arg.1]]]])
+        where {
+            var xy: Point = arg.2.1
+            var wh: Dims  = arg.2.2
+            var w2: _int  = div [wh.1,_2]
+            var h2: _int  = div [wh.2,_2]
+            var p1: Point = [sub[xy.1,w2], sub[xy.2,h2]]
+            var p2: Point = [sub[xy.1,w2], add[xy.2,h2]]
+            var p3: Point = [add[xy.1,w2], add[xy.2,h2]]
+            var p4: Point = [add[xy.1,w2], sub[xy.2,h2]]
+        }
+}
+
+var pico_loop = func () -> () {
+    output pico TPico.13 _0
+    var old: _int = _SDL_GetTicks ()
+    loop {
+        var now: _int = _SDL_GetTicks ()
+        var dt   = sub [now,old]            -- dt   = now - old
+        var togo = sub [_40, dt]            -- togo = 40 - dt
+        if lte [togo,_0] {                  -- if togo<=0
+            emit @GLOBAL Event.5 _40
+            output pico TPico.5
+            emit @GLOBAL Event.6
+            output pico TPico.4
+            set old = add [togo,now]
+        } else {
+            var e: Event = input pico TPico.3 [_SDL_ANY,togo]
+            if not e?4 {
+                emit @GLOBAL e
+            }
+        }
+    }
+}
+
+-------------------------------------------------------------------------------
+
+native type _{
+    void output_pico (TPico arg) {
+        switch (arg.tag) {
+            case 12: {
+                // TODO: _12
+                Pico_IO io = { PICO_SET_ANCHOR, .Set_Anchor = {arg._12._1.tag,arg._12._2.tag} };
+                pico_output(io);
+                break;
+            }
+            default:
+                pico_output(*(Pico_IO*)&arg);
+                break;
+        }
+    }
+
+    int tosdl (int e) {
+        switch (e) {
+            case 3:              return SDL_ANY;
+            //case 4:          return ???;
+            case 7:          return SDL_KEYDOWN;
+            case 8:  return SDL_MOUSEBUTTONDOWN;
+            case 9:    return SDL_MOUSEBUTTONUP;
+            case 10:      return SDL_MOUSEMOTION;
+        }
+        assert(0);
+    }
+
+    void toce (SDL_Event* e, Event* arg) {
+        switch (e->type) {
+            case SDL_KEYDOWN:
+                // TODO: _7
+                *arg = (Event) { 7, { ._7 = e->key.keysym.sym } };
+                break;
+            case SDL_MOUSEBUTTONDOWN: {
+                int bt = e->button.button;
+                int x  = e->button.x;
+                int y  = e->button.y;
+                // TODO: _8
+                *arg = (Event) { 8, { ._8 = {bt,{x,y}} } };
+                break;
+            }
+            case SDL_MOUSEBUTTONUP: {
+                int bt = e->button.button;
+                int x  = e->button.x;
+                int y  = e->button.y;
+                // TODO: _9
+                *arg = (Event) { 9, { ._9 = {bt,{x,y}} } };
+                break;
+            }
+            case SDL_MOUSEMOTION: {
+                int x  = e->button.x;
+                int y  = e->button.y;
+                // TODO: _10
+                *arg = (Event) { 10, { ._10 = {x,y} } };
+                break;
+            }
+        }
+    }
+
+    Event input_pico_Event (TPico arg) {
+        SDL_Event e;
+        switch (arg.tag) {
+            case 2: {
+                // TODO: _2
+                int ok = pico_input(&e, (Pico_IO) {PICO_EVENT,.Event=arg._2});
+                assert(ok);
+                Event s;
+                toce(&e, &s);
+                return s;
+            }
+            case 3: {
+                // TODO: _3
+                int ok = pico_input(&e, (Pico_IO) {
+                    PICO_EVENT_TIMEOUT,
+                    .Event_Timeout = { arg._3._1, arg._3._2 }
+                });
+                if (ok) {
+                    Event s;
+                    toce(&e, &s);
+                    return s;
+                } else {
+                    return (Event) { 4 };
+                }
+                break;
+            }
+        }
+    }
+
+    void input_pico_Unit (TPico arg) {
+        SDL_Event e;
+        switch (arg.tag) {
+            case 1: {
+                int ok = pico_input(&e, *((Pico_IO*)&arg));
+                assert(ok);
+                break;
+            }
+            default:
+                input_pico_Event (arg);
+                break;
+        }
+    }
+}
+
+call _pico_open ()
+-- TODO: pico_close()
+
+
+output pico TPico.21 _("Birds - 09 (pause)")
+output pico TPico.20 [_641,_481]
+output pico TPico.22 [_100,_100]
+output pico TPico.18 _0
+output pico TPico.14 [_0,_0,_0,_255]
+output pico TPico.5
+output pico TPico.13 _0
+
+var win: Dims
+output pico TPico.11 /win
+
+type Bird = task [_int,_int] -> Rect -> ()
+
+var bird = Bird { @SELF      -- arg = [y,speed]
+    var speed = arg.2
+    set pub = [[x,arg.1], [_50,_45]]
+        where {
+            var x: _int = div [umn win.1, _2]
+        }
+    var sin: _float = _0
+
+    paror {
+        var xx: _float = pub.1.1
+        var yy: _float = pub.1.2
+        var out: <(),()> = <.1>
+        watching evt?11 {
+            every evt?5 {
+                var xspeed = speed
+                var v: _float = mul [evt!5,speed]
+                set xx = fadd [xx, fdiv [v,_1000]]
+                set pub.1 = [x,y]
+                    where {
+                        var x: _int = f2int xx
+                        if gt [x,_320] {
+                            set out = <.2>
+                            break
+                        }
+                        var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
+                    }
+                set sin = fadd [sin, _(3.14*$v/100000)]
+            }
+        }
+        if out?1 {
+            every evt?5 {
+                set yy = fsub[yy, fmul [int2f evt!5, _(0.5):_float]]
+                set pub.1.2 = yy
+                if lt [pub.1.2, umn _200] {
+                    break
+                }             
+            }
+            watching 1s {
+                loop {
+                    emit @SELF Event.13 _1
+                    await 100ms
+                    emit @SELF Event.13 _0
+                    await 100ms
+                }
+            }
+        }
+    } with {
+        pauseif evt?13 {
+            every evt?6 {
+                if _( ((int)(($sin+3.14/2)/3.14)) % 2 == 0 ) {
+                    output pico TPico.10 [pub.1, _("res/clumsy_up.png")]
+                } else {
+                    output pico TPico.10 [pub.1, _("res/clumsy_dn.png")]
+                }
+            }
+        }
+    }
+}
+
+spawn { @PAUSE
+    par {
+        pauseif evt?12 {
+            var birds: active {5} Bird
+            par {
+                every 500ms {
+                    spawn bird [y,s] in birds
+                        where {
+                            var y = sub [rem [_(rand()),_480], _240]
+                            var s = add [_100, rem [_(rand()),_100]]
+                        }
+                }
+            } with {
+                every evt?5 {
+                    var b1: active Bird
+                    loop b1 in birds {
+                        var b2: active Bird
+                        loop b2 in birds {
+                            if _($b1 != $b2) {
+                                if isRectVsRect [b1.pub,b2.pub] {
+                                    emit b1 Event.11
+                                    emit b2 Event.11
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } with {
+        loop {
+            await evt?7
+            emit @PAUSE Event.12 _1
+            await evt?7
+            emit @PAUSE Event.12 _0
+        }
+    }
+}
+
+call pico_loop ()
