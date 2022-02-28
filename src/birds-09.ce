@@ -1,0 +1,123 @@
+#include "int.ce"
+#include "float.ce"
+#include "pico.ce"
+
+#define PI 3.14
+
+output pico TPico.USet_Title _("Birds - 09 (pause)")
+output pico TPico.USet_Size [_641,_481]
+output pico TPico.USet_Zoom [_100,_100]
+output pico TPico.USet_Grid _0
+output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
+output pico TPico.UClear
+output pico TPico.USet_Auto _0
+
+var win: Dims
+output pico TPico.UGet_Size /win
+
+type Bird = task [_int,_int] -> Rect -> ()
+
+var bird = Bird { @SELF      -- arg = [y,speed]
+    var speed = arg.2
+    set pub = [[x,arg.1], [_50,_45]]
+        where {
+            var x: _int = div [umn win.1, _2]
+        }
+    var sin: _float = _0
+
+    paror {
+        var xx: _float = pub.1.1
+        var yy: _float = pub.1.2
+        var out: <(),()> = <.1>
+        watching evt?UCollided {
+            every evt?UFrame {
+                var xspeed = speed
+                var v: _float = mul [evt!UFrame,speed]
+                set xx = fadd [xx, fdiv [v,_1000]]
+                set pub.1 = [x,y]
+                    where {
+                        var x: _int = f2int xx
+                        if gt [x,_320] {
+                            set out = <.2>
+                            break
+                        }
+                        var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
+                    }
+                set sin = fadd [sin, _(PI*$v/100000)]
+            }
+        }
+        if out?1 {
+            every evt?UFrame {
+                set yy = fsub[yy, fmul [int2f evt!UFrame, _(0.5):_float]]
+                set pub.1.2 = yy
+                if lt [pub.1.2, umn _200] {
+                    break
+                }             
+            }
+            watching 1s {
+                loop {
+                    emit @SELF Event.UHide _1
+                    await 100ms
+                    emit @SELF Event.UHide _0
+                    await 100ms
+                }
+            }
+        }
+    } with {
+        pauseif evt?UHide {
+            every evt?UDraw {
+                if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
+                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
+                } else {
+                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_dn.png")]
+                }
+            }
+        }
+    }
+}
+
+spawn { @PAUSE
+    par {
+        pauseif evt?UPause {
+            var birds: active {5} Bird
+            par {
+                every 500ms {
+                    spawn bird [y,s] in birds
+                        where {
+                            var y = sub [rem [_(rand()),_480], _240]
+                            var s = add [_100, rem [_(rand()),_100]]
+                        }
+                }
+            } with {
+                every evt?UFrame {
+                    var b1: active Bird
+                    loop b1 in birds {
+                        var b2: active Bird
+                        loop b2 in birds {
+                            if _($b1 != $b2) {
+                                if isRectVsRect [b1.pub,b2.pub] {
+                                    emit b1 Event.UCollided
+                                    emit b2 Event.UCollided
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } with {
+        loop {
+            await evt?UKeyDown
+            emit @PAUSE Event.UPause _1
+            spawn {
+                every evt?UDraw {
+                    output pico TPico.UDraw_Image [[_0,_0], _("res/pause.png")]
+                }
+            }
+            await evt?UKeyDown
+            emit @PAUSE Event.UPause _0
+        }
+    }
+}
+
+call pico_loop ()
