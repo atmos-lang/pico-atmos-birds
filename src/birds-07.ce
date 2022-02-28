@@ -44,8 +44,7 @@ var bird = Bird {       -- arg = [y,speed]
                 set sin = fadd [sin, _(PI*$v/100000)]
             }
         } with {
-            loop {
-                await evt?UFrame
+            every evt?UDraw {
                 if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
                     output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
                 } else {
@@ -67,7 +66,7 @@ spawn {
                 }
         }
     } with {
-        every evt?UDraw {
+        every evt?UFrame {
             var b1: active Bird
             loop b1 in birds {
                 var b2: active Bird
