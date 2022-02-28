@@ -41,7 +41,7 @@ var bird = Bird {       -- arg = [y,speed]
         }
     } with {
         loop {
-            await evt?UFrame
+            await evt?UDraw
             if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
                 output pico TPico.UDraw_Image [rct.1, _("res/clumsy_up.png")]
             } else {

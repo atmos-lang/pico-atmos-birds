@@ -67,7 +67,7 @@ spawn {
                 }
         }
     } with {
-        every evt?UFrame {
+        every evt?UDraw {
             var b1: active Bird
             loop b1 in birds {
                 var b2: active Bird
