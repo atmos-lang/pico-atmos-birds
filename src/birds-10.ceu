@@ -1,88 +1,146 @@
-#include "c.ceu"
-#include "sdl/sdl.ceu"
+^"int.ceu"
+^"float.ceu"
+^"pico.ceu"
 
-#define PI 3.14
+var pi: _float = _(3.14)
 
-var SDL_Color bg = val SDL_Color(0x00,0x00,0x00,0xFF);
+output pico TPico.USet_Title _("Birds - 10 (track)")
+output pico TPico.USet_Size [_641,_481]
+output pico TPico.USet_Zoom [_100,_100]
+output pico TPico.USet_Grid _0
+output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
+output pico TPico.UClear
+output pico TPico.USet_Auto _0
 
-code/call Intersects (var& SDL_Rect rct1, var& SDL_Rect rct2) -> bool
-do
-    escape rct1.x+rct1.w/2 >= rct2.x-rct2.w/2 and
-           rct1.x-rct1.w/2 <= rct2.x+rct2.w/2 and
-           rct1.y+rct1.h/2 >= rct2.y-rct2.h/2 and
-           rct1.y-rct1.h/2 <= rct2.y+rct2.h/2;
-end
+var win: Size
+output pico TPico.UGet_Size /win
 
-var&? SDL_Init sdl = spawn SDL_Init("Birds - 10 (iterator)", 640,480, bg);
-watching sdl do
-    var& SDL_Open_Image img_up =
-        spawn SDL_Open_Image(&sdl.ren, "res/clumsy_up.png");
-    var& SDL_Open_Image img_dn =
-        spawn SDL_Open_Image(&sdl.ren, "res/clumsy_dn.png");
+type Bird = task [_int,_int] -> Rect -> ()
 
-    code/await Bird (var int y, var int speed)
-                        -> (var SDL_Rect rct, event none go_collided)
-                            -> none
-    do
-        rct = val SDL_Rect(20,y, 50,45);
+var bird = Bird { @SELF      -- arg = [y,speed]
+    var speed = arg.2
+    set pub = [[x,arg.1], [_50,_45]]
+        where {
+            var x: _int = div [umn win.1, _2]
+        }
+    var sin: _float = _0
 
-        var real sin = 0;
-        par/or do
-            await go_collided;
-        with
-            var int yy = rct.y;
-            var real x = rct.x;
-            var int dt;
-            every dt in SDL_DT do
-                var real v = dt*speed;
-                x = x + v/1000;
-                rct.x = x as int;
-                rct.y = yy + speed/5*_sin(sin);
-                sin = sin + PI*v/100000;
-                if rct.x > 580 then
-                    break;
-                end
-            end
-        with
-            every SDL_REDRAW do
-                if ((((sin+PI/2)/PI) as int) % 2) == 0 then
-                    _SDL_RenderCopy(&&outer.sdl.ren, &&outer.img_dn.tex.tex, null,
-                                    &&rct as _SDL_Rect&&);
-                else
-                    _SDL_RenderCopy(&&outer.sdl.ren, &&outer.img_up.tex.tex, null,
-                                    &&rct as _SDL_Rect&&);
-                end
-            end
-        end
-    end
+    paror {
+        var xx: _float = pub.1.1
+        var yy: _float = pub.1.2
+        var out: <(),()> = <.1>
+        watching evt?UCollided {
+            every evt?UFrame {
+                var xspeed = speed
+                var v: _float = mul [evt!UFrame,speed]
+                set xx = fadd [xx, fdiv [v,_1000]]
+                set pub.1 = [x,y]
+                    where {
+                        var x: _int = f2int xx
+                        if gt [x,_320] {
+                            set out = <.2>
+                            break
+                        }
+                        var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
+                    }
+                set sin = fadd [sin, _($pi*$v/100000)]
+            }
+        }
+        if out?1 {
+            every evt?UFrame {
+                set yy = fsub[yy, fmul [int2f evt!UFrame, _(0.5):_float]]
+                set pub.1.2 = yy
+                if lt [pub.1.2, umn _200] {
+                    break
+                }             
+            }
+            watching 1s {
+                loop {
+                    emit @SELF Event.UHide _1
+                    await 100ms
+                    emit @SELF Event.UHide _0
+                    await 100ms
+                }
+            }
+        }
+    } with {
+        pauseif evt?UHide {
+            every evt?UDraw {
+                if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
+                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
+                } else {
+                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_dn.png")]
+                }
+            }
+        }
+    }
+}
 
-    loop do
-        watching SDL_MOUSEBUTTONDOWN do
-            pool[] Bird birds;
-            par do
-                every 500ms do
-                    spawn Bird(20+_rand()%350, 100+_rand()%100) in birds;
-                end
-            with
-                every SDL_DT do
-                    var&? Bird bird1;
-                    loop bird1 in birds do
-                        var&? Bird bird2;
-                        loop bird2 in birds do
-                            if (&&bird1!.rct as usize)<(&&bird2!.rct as usize)
-                                and (call Intersects(&bird1!.rct,&bird2!.rct))
-                            then
-                                emit bird1!.go_collided;
-                                emit bird2!.go_collided;
-                                break;
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
+spawn { @PAUSE
+    par {
+        pauseif evt?UPause {
+            var birds: active {5} Bird
+            par {
+                every 500ms {
+                    spawn bird [y,s] in birds
+                        where {
+                            var y = sub [rem [_(rand()),_480], _240]
+                            var s = add [_100, rem [_(rand()),_100]]
+                        }
+                }
+            } with {
+                every evt?UFrame {
+                    var b1: active Bird
+                    loop b1 in birds {
+                        var b2: active Bird
+                        loop b2 in birds {
+                            if _($b1 != $b2) {
+                                if isRectVsRect [b1.pub,b2.pub] {
+                                    emit b1 Event.UCollided
+                                    emit b2 Event.UCollided
+                                }
+                            }
+                        }
+                    }
+                }
+            } with {
+                loop {
+                    var track: active Bird
+                    var b: active Bird
+                    var ok: <(),()> = <.1>
+                    every evt?UMouseButtonDown {
+                        loop b in birds {
+                            if isPointVsRect [evt!UMouseButtonDown.2,b.pub] {
+                                set track = b
+                                set ok = <.2>
+                                break
+                            }
+                        }
+                        if ok?2 {
+                            break
+                        }
+                    }
+                    watching track {
+                        every evt?UDraw {
+                            output pico TPico.UDraw_Line [[_0,_(-240)],track.pub.1]
+                        }
+                    }
+                }
+            }
+        }
+    } with {
+        loop {
+            await evt?UKeyDown
+            emit @PAUSE Event.UPause _1
+            spawn {
+                every evt?UDraw {
+                    output pico TPico.UDraw_Image [[_0,_0], _("res/pause.png")]
+                }
+            }
+            await evt?UKeyDown
+            emit @PAUSE Event.UPause _0
+        }
+    }
+}
 
-escape 0;
-
+call pico_loop ()

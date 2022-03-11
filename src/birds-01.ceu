@@ -1,10 +1,8 @@
-#include "int.ce"
-#include "float.ce"
-#include "pico.ce"
+^"int.ceu"
+^"float.ceu"
+^"pico.ceu"
 
-#define PI 3.14
-
-output pico TPico.USet_Title _("Birds - 05 (termination)")
+output pico TPico.USet_Title _("Birds - 01 (task)")
 output pico TPico.USet_Size [_640,_480]
 output pico TPico.USet_Zoom [_100,_100]
 output pico TPico.USet_Grid _0
@@ -12,7 +10,7 @@ output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
 output pico TPico.UClear
 output pico TPico.USet_Auto _0
 
-var win: Dims
+var win: Size
 output pico TPico.UGet_Size /win
 
 type Bird = task [_int,_int] -> () -> ()
@@ -25,7 +23,7 @@ var bird = Bird {       -- arg = [y,speed]
         }
     var sin: _float = _0
 
-    paror {
+    par {
         var xx: _float = rct.1.1
         var yy: _float = rct.1.2
         every evt?UFrame {
@@ -35,16 +33,13 @@ var bird = Bird {       -- arg = [y,speed]
             set rct.1 = [x,y]
                 where {
                     var x: _int = f2int xx
-                    if gt [x,_320] {
-                        break
-                    }
                     var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
                 }
-            set sin = fadd [sin, _(PI*$v/100000)]
+            set sin = fadd [sin, _(3.14*$v/100000)]
         }
     } with {
         every evt?UDraw {
-            if _( ((int)(($sin+PI/2)/PI)) % 2 == 0 ) {
+            if _( ((int)(($sin+3.14/2)/3.14)) % 2 == 0 ) {
                 output pico TPico.UDraw_Image [rct.1, _("res/clumsy_up.png")]
             } else {
                 output pico TPico.UDraw_Image [rct.1, _("res/clumsy_dn.png")]
@@ -53,15 +48,7 @@ var bird = Bird {       -- arg = [y,speed]
     }
 }
 
-spawn {
-    var birds: active {5} Bird
-    every 1s {
-        spawn bird [y,s] in birds
-            where {
-                var y = sub [rem [_(rand()),_480], _240]
-                var s = add [_100, rem [_(rand()),_100]]
-            }
-    }
-}
+spawn bird [_150, _100]
+spawn bird [  _0, _200]
 
 call pico_loop ()
