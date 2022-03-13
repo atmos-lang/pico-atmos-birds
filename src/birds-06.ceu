@@ -4,16 +4,16 @@
 
 var pi: _float = _(3.14)
 
-output pico TPico.USet_Title _("Birds - 06 (pool/scope)")
-output pico TPico.USet_Size [_640,_480]
-output pico TPico.USet_Zoom [_100,_100]
-output pico TPico.USet_Grid _0
-output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
-output pico TPico.UClear
-output pico TPico.USet_Auto _0
+output pico Pico.Set_Title _("Birds - 06 (pool/scope)")
+output pico Pico.Set_Size [_640,_480]
+output pico Pico.Set_Zoom [_100,_100]
+output pico Pico.Set_Grid _0
+output pico Pico.Set_Color_Clear [_0,_0,_0,_255]
+output pico Pico.Clear
+output pico Pico.Set_Auto _0
 
 var win: Size
-output pico TPico.UGet_Size /win
+output pico Pico.Get_Size /win
 
 type Bird = task [_int,_int] -> () -> ()
 
@@ -28,9 +28,9 @@ var bird = Bird {       -- arg = [y,speed]
     paror {
         var xx: _float = rct.1.1
         var yy: _float = rct.1.2
-        every evt?UFrame {
+        every evt?Frame {
             var xspeed = speed
-            var v: _float = mul [evt!UFrame,speed]
+            var v: _float = mul [evt!Frame,speed]
             set xx = fadd [xx, fdiv [v,_1000]]
             set rct.1 = [x,y]
                 where {
@@ -43,11 +43,11 @@ var bird = Bird {       -- arg = [y,speed]
             set sin = fadd [sin, _($pi*$v/100000)]
         }
     } with {
-        every evt?UDraw {
+        every evt?Draw {
             if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                output pico TPico.UDraw_Image [rct.1, _("res/clumsy_up.png")]
+                output pico Pico.Draw_Image [rct.1, _("res/clumsy_up.png")]
             } else {
-                output pico TPico.UDraw_Image [rct.1, _("res/clumsy_dn.png")]
+                output pico Pico.Draw_Image [rct.1, _("res/clumsy_dn.png")]
             }
         }
     }
@@ -55,7 +55,7 @@ var bird = Bird {       -- arg = [y,speed]
 
 spawn {
     loop {
-        watching evt?UMouseButtonDown {
+        watching evt?MouseButtonDown {
             var birds: active {5} Bird
             every 1s {
                 spawn bird [y,s] in birds

@@ -4,16 +4,16 @@
 
 var pi: _float = _(3.14)
 
-output pico TPico.USet_Title _("Birds - 09 (pause)")
-output pico TPico.USet_Size [_641,_481]
-output pico TPico.USet_Zoom [_100,_100]
-output pico TPico.USet_Grid _0
-output pico TPico.USet_Color_Clear [_0,_0,_0,_255]
-output pico TPico.UClear
-output pico TPico.USet_Auto _0
+output pico Pico.Set_Title _("Birds - 09 (pause)")
+output pico Pico.Set_Size [_641,_481]
+output pico Pico.Set_Zoom [_100,_100]
+output pico Pico.Set_Grid _0
+output pico Pico.Set_Color_Clear [_0,_0,_0,_255]
+output pico Pico.Clear
+output pico Pico.Set_Auto _0
 
 var win: Size
-output pico TPico.UGet_Size /win
+output pico Pico.Get_Size /win
 
 type Bird = task [_int,_int] -> Rect -> ()
 
@@ -29,10 +29,10 @@ var bird = Bird { @SELF      -- arg = [y,speed]
         var xx: _float = pub.1.1
         var yy: _float = pub.1.2
         var out: <(),()> = <.1>
-        watching evt?UCollided {
-            every evt?UFrame {
+        watching evt?Collided {
+            every evt?Frame {
                 var xspeed = speed
-                var v: _float = mul [evt!UFrame,speed]
+                var v: _float = mul [evt!Frame,speed]
                 set xx = fadd [xx, fdiv [v,_1000]]
                 set pub.1 = [x,y]
                     where {
@@ -47,8 +47,8 @@ var bird = Bird { @SELF      -- arg = [y,speed]
             }
         }
         if out?1 {
-            every evt?UFrame {
-                set yy = fsub[yy, fmul [int2f evt!UFrame, _(0.5):_float]]
+            every evt?Frame {
+                set yy = fsub[yy, fmul [int2f evt!Frame, _(0.5):_float]]
                 set pub.1.2 = yy
                 if lt [pub.1.2, umn _200] {
                     break
@@ -56,20 +56,20 @@ var bird = Bird { @SELF      -- arg = [y,speed]
             }
             watching 1s {
                 loop {
-                    emit @SELF Event.UHide _1
+                    emit @SELF Event.Hide _1
                     await 100ms
-                    emit @SELF Event.UHide _0
+                    emit @SELF Event.Hide _0
                     await 100ms
                 }
             }
         }
     } with {
-        pauseif evt?UHide {
-            every evt?UDraw {
+        pauseif evt?Hide {
+            every evt?Draw {
                 if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_up.png")]
+                    output pico Pico.Draw_Image [pub.1, _("res/clumsy_up.png")]
                 } else {
-                    output pico TPico.UDraw_Image [pub.1, _("res/clumsy_dn.png")]
+                    output pico Pico.Draw_Image [pub.1, _("res/clumsy_dn.png")]
                 }
             }
         }
@@ -78,7 +78,7 @@ var bird = Bird { @SELF      -- arg = [y,speed]
 
 spawn { @PAUSE
     par {
-        pauseif evt?UPause {
+        pauseif evt?Pause {
             var birds: active {5} Bird
             par {
                 every 500ms {
@@ -89,15 +89,15 @@ spawn { @PAUSE
                         }
                 }
             } with {
-                every evt?UFrame {
+                every evt?Frame {
                     var b1: active Bird
                     loop b1 in birds {
                         var b2: active Bird
                         loop b2 in birds {
                             if _($b1 != $b2) {
                                 if isRectVsRect [b1.pub,b2.pub] {
-                                    emit b1 Event.UCollided
-                                    emit b2 Event.UCollided
+                                    emit b1 Event.Collided
+                                    emit b2 Event.Collided
                                 }
                             }
                         }
@@ -107,15 +107,15 @@ spawn { @PAUSE
         }
     } with {
         loop {
-            await evt?UKeyDown
-            emit @PAUSE Event.UPause _1
+            await evt?KeyDown
+            emit @PAUSE Event.Pause _1
             spawn {
-                every evt?UDraw {
-                    output pico TPico.UDraw_Image [[_0,_0], _("res/pause.png")]
+                every evt?Draw {
+                    output pico Pico.Draw_Image [[_0,_0], _("res/pause.png")]
                 }
             }
-            await evt?UKeyDown
-            emit @PAUSE Event.UPause _0
+            await evt?KeyDown
+            emit @PAUSE Event.Pause _0
         }
     }
 }
