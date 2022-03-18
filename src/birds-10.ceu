@@ -4,16 +4,16 @@
 
 var pi: _float = _(3.14)
 
-output pico Pico.Set_Title _("Birds - 10 (track)")
-output pico Pico.Set_Size [_641,_481]
-output pico Pico.Set_Zoom [_100,_100]
-output pico Pico.Set_Grid _0
-output pico Pico.Set_Color_Clear [_0,_0,_0,_255]
-output pico Pico.Clear
-output pico Pico.Set_Auto _0
+output pico Pico.Output.Set.Title _("Birds - 10 (track)")
+output pico Pico.Output.Set.Size [_641,_481]
+output pico Pico.Output.Set.Zoom [_100,_100]
+output pico Pico.Output.Set.Grid _0
+output pico Pico.Output.Set.Color.Clear [_0,_0,_0,_255]
+output pico Pico.Output.Clear
+output pico Pico.Output.Set.Auto _0
 
 var win: Size
-output pico Pico.Get_Size /win
+output pico Pico.Output.Get.Size /win
 
 type Bird = task [_int,_int] -> Rect -> ()
 
@@ -67,9 +67,9 @@ var bird = Bird { @SELF      -- arg = [y,speed]
         pauseif evt?Hide {
             every evt?Draw {
                 if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                    output pico Pico.Draw_Image [pub.1, _("res/clumsy_up.png")]
+                    output pico Pico.Output.Draw.Image [pub.1, _("res/clumsy_up.png")]
                 } else {
-                    output pico Pico.Draw_Image [pub.1, _("res/clumsy_dn.png")]
+                    output pico Pico.Output.Draw.Image [pub.1, _("res/clumsy_dn.png")]
                 }
             }
         }
@@ -108,9 +108,9 @@ spawn { @PAUSE
                     var track: active Bird
                     var b: active Bird
                     var ok: <(),()> = <.1>
-                    every evt?MouseButtonDown {
+                    every evt?Mouse?Button?Down {
                         loop b in birds {
-                            if isPointVsRect [evt!MouseButtonDown.2,b.pub] {
+                            if isPointVsRect [evt!Mouse!Button!Down.pos,b.pub] {
                                 set track = b
                                 set ok = <.2>
                                 break
@@ -122,7 +122,7 @@ spawn { @PAUSE
                     }
                     watching track {
                         every evt?Draw {
-                            output pico Pico.Draw_Line [[_0,_(-240)],track.pub.1]
+                            output pico Pico.Output.Draw.Line [[_0,_(-240)],track.pub.1]
                         }
                     }
                 }
@@ -130,14 +130,14 @@ spawn { @PAUSE
         }
     } with {
         loop {
-            await evt?KeyDown
+            await evt?Key?Down
             emit @PAUSE Event.Pause _1
             spawn {
                 every evt?Draw {
-                    output pico Pico.Draw_Image [[_0,_0], _("res/pause.png")]
+                    output pico Pico.Output.Draw.Image [[_0,_0], _("res/pause.png")]
                 }
             }
-            await evt?KeyDown
+            await evt?Key?Down
             emit @PAUSE Event.Pause _0
         }
     }

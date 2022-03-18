@@ -4,16 +4,16 @@
 
 var pi: _float = _(3.14)
 
-output pico Pico.Set_Title _("Birds - 07 (iterator)")
-output pico Pico.Set_Size [_640,_480]
-output pico Pico.Set_Zoom [_100,_100]
-output pico Pico.Set_Grid _0
-output pico Pico.Set_Color_Clear [_0,_0,_0,_255]
-output pico Pico.Clear
-output pico Pico.Set_Auto _0
+output pico Pico.Output.Set.Title _("Birds - 07 (iterator)")
+output pico Pico.Output.Set.Size [_640,_480]
+output pico Pico.Output.Set.Zoom [_100,_100]
+output pico Pico.Output.Set.Grid _0
+output pico Pico.Output.Set.Color.Clear [_0,_0,_0,_255]
+output pico Pico.Output.Clear
+output pico Pico.Output.Set.Auto _0
 
 var win: Size
-output pico Pico.Get_Size /win
+output pico Pico.Output.Get.Size /win
 
 type Bird = task [_int,_int] -> Rect -> ()
 
@@ -46,9 +46,9 @@ var bird = Bird {       -- arg = [y,speed]
         } with {
             every evt?Draw {
                 if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                    output pico Pico.Draw_Image [pub.1, _("res/clumsy_up.png")]
+                    output pico Pico.Output.Draw.Image [pub.1, _("res/clumsy_up.png")]
                 } else {
-                    output pico Pico.Draw_Image [pub.1, _("res/clumsy_dn.png")]
+                    output pico Pico.Output.Draw.Image [pub.1, _("res/clumsy_dn.png")]
                 }
             }
         }
