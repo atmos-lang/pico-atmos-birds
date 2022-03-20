@@ -1,3 +1,4 @@
+^"event.ceu"
 ^"int.ceu"
 ^"float.ceu"
 ^"pico.ceu"
@@ -52,7 +53,7 @@ var bird = Bird {       -- arg = [y,speed]
 
 spawn {
     var birds: active {5} Bird
-    every 1s {
+    every 500ms {
         spawn bird [y,s] in birds
             where {
                 var y = sub [rem [_(rand()),_480], _240]

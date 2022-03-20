@@ -1,6 +1,12 @@
+^"event.ceu"
 ^"int.ceu"
 ^"float.ceu"
 ^"pico.ceu"
+
+type Event += <
+    Collided = (),
+    Hide     = _int
+>
 
 var pi: _float = _(3.14)
 
