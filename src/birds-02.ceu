@@ -14,7 +14,7 @@ output pico Pico.Output.Clear
 output pico Pico.Output.Set.Auto _0
 
 var win: Size
-output pico Pico.Output.Get.Size /win
+output pico Pico.Output.Get.Size.Window [/win]
 
 type Bird = task [_int,_int] -> () -> ()
 
