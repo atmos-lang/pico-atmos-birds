@@ -4,8 +4,8 @@
 ^"pico.ceu"
 
 type Event += <
-    Collided = (),
-    Hide     = _int,
+    Collided = ()
+    Hide     = _int
     Pause    = _int
 >
 
