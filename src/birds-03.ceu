@@ -1,20 +1,20 @@
-^"event.ceu"
+^"prelude.ceu"
 ^"int.ceu"
 ^"float.ceu"
 ^"pico.ceu"
 
 var pi: _float = _(3.14)
 
-output pico Pico.Output.Set.Title _("Birds - 03 (pool)")
-output pico Pico.Output.Set.Size [_640,_480]
-output pico Pico.Output.Set.Zoom [_100,_100]
-output pico Pico.Output.Set.Grid _0
-output pico Pico.Output.Set.Color.Clear [_0,_0,_0,_255]
-output pico Pico.Output.Clear
-output pico Pico.Output.Set.Auto _0
+output Pico.Set.Title _("Birds - 03 (pool)")
+output Pico.Set.Size [_640,_480]
+output Pico.Set.Zoom [_100,_100]
+output Pico.Set.Grid _0
+output Pico.Set.Color.Clear [_0,_0,_0,_255]
+output Pico.Clear
+output Pico.Set.Auto _0
 
 var win: Size
-output pico Pico.Output.Get.Size.Window [/win]
+output Pico.Get.Size.Window [/win]
 
 type Bird = task [_int,_int] -> () -> ()
 
@@ -43,27 +43,30 @@ var bird = Bird {       -- arg = [y,speed]
     } with {
         every evt?Draw {
             if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                output pico Pico.Output.Draw.Image [rct.1, _("res/clumsy_up.png")]
+                output Pico.Draw.Image [rct.1, _("res/clumsy_up.png")]
             } else {
-                output pico Pico.Output.Draw.Image [rct.1, _("res/clumsy_dn.png")]
+                output Pico.Draw.Image [rct.1, _("res/clumsy_dn.png")]
             }
         }
     }
 }
 
-var birds: active {} Bird
-var i: _int = _1
-loop {
-    spawn bird [y,s] in birds
-        where {
-            var y = sub [mul [_100,i], _300]
-            var s = add [_100, mul [_10,i]]
+spawn {
+    var birds: active {} Bird
+    var i: _int = _1
+    loop {
+        spawn bird [y,s] in birds
+            where {
+                var y = sub [mul [_100,i], _300]
+                var s = add [_100, mul [_10,i]]
+            }
+        if eq [i,_5] {
+            break
+        } else {
+            set i = add [i,_1]
         }
-    if eq [i,_5] {
-        break
-    } else {
-        set i = add [i,_1]
     }
+    await _0
 }
 
 call pico_loop ()

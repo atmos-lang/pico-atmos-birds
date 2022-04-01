@@ -1,4 +1,4 @@
-^"event.ceu"
+^"prelude.ceu"
 ^"int.ceu"
 ^"float.ceu"
 ^"pico.ceu"
@@ -11,16 +11,16 @@ type Event += <
 
 var pi: _float = _(3.14)
 
-output pico Pico.Output.Set.Title _("Birds - 10 (track)")
-output pico Pico.Output.Set.Size [_641,_481]
-output pico Pico.Output.Set.Zoom [_100,_100]
-output pico Pico.Output.Set.Grid _0
-output pico Pico.Output.Set.Color.Clear [_0,_0,_0,_255]
-output pico Pico.Output.Clear
-output pico Pico.Output.Set.Auto _0
+output Pico.Set.Title _("Birds - 10 (track)")
+output Pico.Set.Size [_641,_481]
+output Pico.Set.Zoom [_100,_100]
+output Pico.Set.Grid _0
+output Pico.Set.Color.Clear [_0,_0,_0,_255]
+output Pico.Clear
+output Pico.Set.Auto _0
 
 var win: Size
-output pico Pico.Output.Get.Size.Window [/win]
+output Pico.Get.Size.Window [/win]
 
 type Bird = task [_int,_int] -> Rect -> ()
 
@@ -74,9 +74,9 @@ var bird = Bird { @SELF      -- arg = [y,speed]
         pauseif evt?Hide {
             every evt?Draw {
                 if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                    output pico Pico.Output.Draw.Image [pub.1, _("res/clumsy_up.png")]
+                    output Pico.Draw.Image [pub.1, _("res/clumsy_up.png")]
                 } else {
-                    output pico Pico.Output.Draw.Image [pub.1, _("res/clumsy_dn.png")]
+                    output Pico.Draw.Image [pub.1, _("res/clumsy_dn.png")]
                 }
             }
         }
@@ -129,7 +129,7 @@ spawn { @PAUSE
                     }
                     watching track {
                         every evt?Draw {
-                            output pico Pico.Output.Draw.Line [[_0,_(-240)],track.pub.1]
+                            output Pico.Draw.Line [[_0,_(-240)],track.pub.1]
                         }
                     }
                 }
@@ -141,7 +141,7 @@ spawn { @PAUSE
             emit @PAUSE Event.Pause _1
             spawn {
                 every evt?Draw {
-                    output pico Pico.Output.Draw.Image [[_0,_0], _("res/pause.png")]
+                    output Pico.Draw.Image [[_0,_0], _("res/pause.png")]
                 }
             }
             await evt?Key?Down
