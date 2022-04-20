@@ -22,7 +22,7 @@ output Pico.Get.Size.Window [/win]
 
 type Bird = task [_int,_int] -> Rect -> ()
 
-var bird = Bird {       -- arg = [y,speed]
+task bird: Bird {       -- arg = [y,speed]
     var speed = arg.2
     set pub = [[x,arg.1], [_100,_90]]
         where {

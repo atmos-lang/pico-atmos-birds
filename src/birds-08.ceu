@@ -23,7 +23,7 @@ output Pico.Get.Size.Window [/win]
 
 type Bird = task [_int,_int] -> Rect -> ()
 
-var bird = Bird { @SELF      -- arg = [y,speed]
+task bird: Bird {       -- arg = [y,speed]
     var speed = arg.2
     set pub = [[x,arg.1], [_50,_45]]
         where {
@@ -70,7 +70,7 @@ var bird = Bird { @SELF      -- arg = [y,speed]
             }
         }
     } with {
-        pauseif evt?Hide {
+        pauseon evt?Hide {
             every evt?Draw {
                 if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
                     output Pico.Draw.Image [pub.1, _("res/clumsy_up.png")]
