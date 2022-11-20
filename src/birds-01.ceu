@@ -35,7 +35,7 @@ set Bird = task (y,speed) {
             var v
             set v = EVT * speed
             set xx = xx + (v/1000)
-            set y = yy + ((xspeed/5) * native{return (sin($sin));})
+            set y = yy + ((xspeed/5) * `#number sin($sin.Number)`)
             set rct[0] = [xx,y]
             set sin = sin + (3.14*v/100000)
         }
@@ -51,9 +51,9 @@ set Bird = task (y,speed) {
                 }
             }
             if (((sin+(3.14/2))/3.14)) % 2 == 0 {
-                pico_output_draw_image(rct[0][0],rct[0][1], native{return ((XXX){.p="res/clumsy_up.png"}).d;})
+                pico_output_draw_image(rct[0][0],rct[0][1], `#pointer "res/clumsy_up.png"`);
             } else {
-                pico_output_draw_image(rct[0][0],rct[0][1], native{return ((XXX){.p="res/clumsy_dn.png"}).d;})
+                pico_output_draw_image(rct[0][0],rct[0][1], `#pointer "res/clumsy_dn.png"`);
             }
         }
     }()
