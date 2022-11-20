@@ -1,7 +1,6 @@
 ^["pico.ceu"]
 
-;;output Pico.Set.Title _("Birds - 01 (task)")
-
+pico_state_set_title(`#pointer "Birds - 01 (task)"`)
 pico_state_set_size(640,480)
 pico_state_set_size_pixel(1,1)
 pico_state_set_grid(false)
