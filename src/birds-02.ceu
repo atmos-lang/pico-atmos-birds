@@ -16,17 +16,14 @@ var Bird = task (y,speed) {
         var xx = rct[0][0]
         var yy = rct[0][1]
         while true {
-            do {
-                var evt
-                set evt = #forever
-                while evt /= #frame {
-                    set evt = yield nil
-                }
+            yield ()
+            while evt[#type] /= #frame {
+                yield ()
             }
             var xspeed
             set xspeed = speed
             var v
-            set v = EVT * speed
+            set v = evt[#dt] * speed
             set xx = xx + (v/1000)
             set y = yy + ((xspeed/5) * `#number sin($sin.Number)`)
             set rct[0] = [xx,y]
@@ -34,12 +31,9 @@ var Bird = task (y,speed) {
         }
     } with {
         while (true) {
-            do {
-                var evt
-                set evt = #forever
-                while evt /= #draw {
-                    set evt = yield nil
-                }
+            yield ()
+            while evt[#type] /= #draw {
+                yield ()
             }
             if `#number ((int)(($sin.Number+(3.14/2))/3.14))` % 2 == 0 {
                 pico_output_draw_image(rct[0][0],rct[0][1], `#pointer "res/clumsy_up.png"`);
@@ -54,10 +48,9 @@ spawn {
     while true {
         spawn Bird (150, 100)
         spawn Bird (  0, 200)
-        var evt
-        set evt = #forever
-        while evt /= #sdl {
-            set evt = yield nil
+        yield ()
+        while evt[#type] /= #mousebuttondown {
+            yield ()
         }
     }
 }
