@@ -31,7 +31,7 @@ task Bird (y,speed) {
 }
 
 spawn {
-    var birds = coroutines()    ;; TODO: coroutines(5)
+    var birds = coroutines(5)
     var i = 1
     while i <= 5 {
         (spawn in birds, Bird(y,s)) where {

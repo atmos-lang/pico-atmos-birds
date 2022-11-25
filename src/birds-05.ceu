@@ -34,7 +34,7 @@ task Bird (y,speed) {
 
 spawn {
     var birds = coroutines(5)
-    every evt[:type]==:mousebuttondown {            ;; TODO: await 500ms
+    every 500ms {
         (spawn in birds, Bird(y,s)) where {
             var y = (`:number rand()` % 480) - 240
             var s = 100 + (`:number rand()` % 100)
