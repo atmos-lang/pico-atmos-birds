@@ -1,68 +1,45 @@
-^"prelude.ceu"
-^"int.ceu"
-^"float.ceu"
-^"pico.ceu"
+^["pico.ceu"]
 
-var pi: _float = _(3.14)
+pico_state_set_title(`:pointer "Birds - 05 (termination)"`)
+pico_state_set_size(640,480)
+pico_state_set_size_pixel(1,1)
+pico_state_set_grid(false)
+pico_state_set_color_clear(0,0,0,255)
 
-output Pico.Set.Title _("Birds - 05 (termination)")
-output Pico.Set.Size [_640,_480]
-output Pico.Set.Zoom [_100,_100]
-output Pico.Set.Grid _0
-output Pico.Set.Color.Clear [_0,_0,_0,_255]
-output Pico.Clear
-output Pico.Set.Auto _0
+var win = pico_state_get_size()
 
-var win: Size
-output Pico.Get.Size.Window [/win]
-
-type Bird = task [_int,_int] -> () -> ()
-
-task bird: Bird {       -- arg = [y,speed]
-    var speed = arg.2
-    var rct: Rect = [[x,arg.1], [_50,_45]]
-        where {
-            var x: _int = div [umn win.1, _2]
-        }
-    var sin: _float = _0
-
-    paror {
-        var xx: _float = rct.1.1
-        var yy: _float = rct.1.2
-        every evt?Frame {
-            var xspeed = speed
-            var v: _float = mul [evt!Frame,speed]
-            set xx = fadd [xx, fdiv [v,_1000]]
-            set rct.1 = [x,y]
-                where {
-                    var x: _int = f2int xx
-                    if gt [x,_320] {
-                        break
-                    }
-                    var y: _int = fadd [yy, fmul [int2f div [xspeed,_5],_(sin($sin))]]
+task Bird (y,speed) {
+    var xx = (-win[0]) / 2
+    var yy = y
+    var sin = 0
+    watching xx>320 {
+        par {
+            every evt[:type]==:frame {
+                var v = evt[:dt] * speed
+                set xx = xx + (v/1000)
+                set yy = y + ((speed/5) * `:number sin($sin.Number)`)
+                set sin = sin + (3.14*v/100000)
+            }
+        } with {
+            every evt[:type]==:draw {
+                if `:number ((int)(($sin.Number+(3.14/2))/3.14))` % 2 == 0 {
+                    pico_output_draw_image(xx,yy, `:pointer "res/clumsy_up.png"`);
+                } else {
+                    pico_output_draw_image(xx,yy, `:pointer "res/clumsy_dn.png"`);
                 }
-            set sin = fadd [sin, _($pi*$v/100000)]
-        }
-    } with {
-        every evt?Draw {
-            if _( ((int)(($sin+$pi/2)/$pi)) % 2 == 0 ) {
-                output Pico.Draw.Image [rct.1, _("res/clumsy_up.png")]
-            } else {
-                output Pico.Draw.Image [rct.1, _("res/clumsy_dn.png")]
             }
         }
     }
 }
 
 spawn {
-    var birds: active {5} Bird
-    every 500ms {
-        spawn bird [y,s] in birds
-            where {
-                var y = sub [rem [_(rand()),_480], _240]
-                var s = add [_100, rem [_(rand()),_100]]
-            }
+    var birds = coroutines(5)
+    every evt[:type]==:mousebuttondown {            ;; TODO: await 500ms
+        (spawn in birds, Bird(y,s)) where {
+            var y = (`:number rand()` % 480) - 240
+            var s = 100 + (`:number rand()` % 100)
+        }
     }
 }
 
-call pico_loop ()
+pico_loop ()
