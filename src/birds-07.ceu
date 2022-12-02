@@ -11,10 +11,10 @@ var win = pico_state_get_size()
 task Bird (y,speed) {
     set pub = [(-win.0)/2, y, 100, 90]
     var sin = 0
-    watching evt == :collided {
+    watching evt.type == :collided {
         watching pub.0>320 {
             par {
-                every evt.type==:frame {
+                every evt.type == :frame {
                     var v = evt.dt * speed
                     set pub.0 = pub.0 + (v/1000)
                     set pub.1 = y + ((speed/5) * `:number sin($sin.Number)`)
@@ -48,7 +48,8 @@ spawn {
                 while b2 in birds {
                     if b1 /= b2 {
                         if pico_rect_vs_rect?(b1.pub,b2.pub) {
-                            println(b1, b2)
+                            broadcast in b1, @[ (:type,:collided) ]
+                            broadcast in b2, @[ (:type,:collided) ]
                         }
                     }
                 }
