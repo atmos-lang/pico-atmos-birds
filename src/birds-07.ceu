@@ -11,8 +11,8 @@ var win = pico_state_get_size()
 task Bird (y,speed) {
     set pub = [(-win.0)/2, y, 100, 90]
     var sin = 0
-    watching evt.type == :collided {
-        watching pub.0>320 {
+    awaiting evt.type == :collided {
+        awaiting pub.0>320 {
             par {
                 every evt.type == :frame {
                     var v = evt.dt * speed

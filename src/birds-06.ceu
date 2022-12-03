@@ -12,7 +12,7 @@ task Bird (y,speed) {
     var xx = (-win[0]) / 2
     var yy = y
     var sin = 0
-    watching xx>320 {
+    awaiting xx>320 {
         par {
             every evt[:type]==:frame {
                 var v = evt[:dt] * speed
@@ -33,9 +33,9 @@ task Bird (y,speed) {
 }
 
 spawn {
-    watching evt[:type]==:mousebuttondown and evt[:button]==`:number SDL_BUTTON_RIGHT` {
+    awaiting evt[:type]==:mousebuttondown and evt[:button]==`:number SDL_BUTTON_RIGHT` {
         while true {
-            watching evt[:type] == :mousebuttondown {
+            awaiting evt[:type] == :mousebuttondown {
                 var birds = coroutines(5)
                 every 500ms {
                     (spawn in birds, Bird(y,s)) where {
