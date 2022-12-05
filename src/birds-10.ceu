@@ -61,39 +61,42 @@ task Bird (y,speed) {
 }
 
 spawn {
-    toggle evt.type==:pause -> evt.type==:resume {
-        var birds = coroutines(5)
-        par {
-            every 500ms {
-                (spawn in birds, Bird(y,s)) where {
-                    var y = (`:number rand()` % 480) - 240
-                    var s = 100 + (`:number rand()` % 100)
+    par {
+        toggle evt.type==:pause -> evt.type==:resume {
+            var birds = coroutines(5)
+            par {
+                every 500ms {
+                    (spawn in birds, Bird(y,s)) where {
+                        var y = (`:number rand()` % 480) - 240
+                        var s = 100 + (`:number rand()` % 100)
+                    }
                 }
-            }
-        } with {
-            every evt.type == :frame {
-                while b1 in birds {
-                    while b2 in birds {
-                        if b1 /= b2 {
-                            if pico_rect_vs_rect?(b1.pub,b2.pub) {
-                                broadcast in b1, @[ (:type,:collided) ]
-                                broadcast in b2, @[ (:type,:collided) ]
+            } with {
+                every evt.type == :frame {
+                    while b1 in birds {
+                        while b2 in birds {
+                            if b1 /= b2 {
+                                if pico_rect_vs_rect?(b1.pub,b2.pub) {
+                                    broadcast in b1, @[ (:type,:collided) ]
+                                    broadcast in b2, @[ (:type,:collided) ]
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
-    while true {
-        await evt.type==:keydown and evt.sym==`:number SDLK_p`
-        broadcast in :global, :pause
-        awaiting evt.type==:keydown and evt.sym==`:number SDLK_p` {
-            every evt.type == :draw {
-                pico_output_draw_image(pub.0,pub.1, `:pointer "res/pause.png"`);
+    } with {
+        while true {
+            await evt.type==:keydown and evt.sym==`:number SDLK_p`
+            broadcast in :global, @[(:type,:pause)]
+            awaiting evt.type==:keydown and evt.sym==`:number SDLK_p` {
+                every evt.type == :draw {
+                    pico_output_draw_image(0,0, `:pointer "res/pause.png"`);
+                }
             }
+            broadcast in :global, @[(:type,:resume)]
         }
-        broadcast in :global, :resume
     }
 }
 
