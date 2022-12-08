@@ -1,0 +1,122 @@
+^["pico.ceu"]
+
+pico_state_set_title(`:pointer "Birds - 11 (tracking)"`)
+pico_state_set_size(640,480)
+pico_state_set_size_pixel(1,1)
+pico_state_set_grid(false)
+pico_state_set_color_clear(0,0,0,255)
+pico_state_set_color_draw(255,255,255,255)
+
+var win = pico_state_get_size()
+
+task Bird (y,speed) {
+    set pub = [(-win.0)/2, y, 100, 90]
+    var sin = 0
+    awaiting pub.0 > 320 {
+        awaiting evt.type == :collided {
+            par {
+                every evt.type == :frame {
+                    var v = evt.dt * speed
+                    set pub.0 = pub.0 + (v/1000)
+                    set pub.1 = y + ((speed/5) * `:number sin($sin.Number)`)
+                    set sin = sin + (3.14*v/100000)
+                }
+            } with {
+                every evt.type == :draw {
+                    if `:number ((int)(($sin.Number+(3.14/2))/3.14))` % 2 == 0 {
+                        pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_up.png"`);
+                    } else {
+                        pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
+                    }
+                }
+            }
+        }
+        awaiting pub.1 < -200 {
+            par {
+                every evt.type == :frame {
+                    set pub.1 = pub.1 - (evt.dt * 0.5)
+                }
+            } with {
+                every evt.type == :draw {
+                    pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
+                }
+            }
+        }
+        awaiting 1s {
+            par {
+                while true {
+                    broadcast in :task, @[(:type,:hide)]
+                    await 100ms
+                    broadcast in :task, @[(:type,:show)]
+                    await 100ms
+                }
+            } with {
+                toggle evt.type==:hide -> evt.type==:show {
+                    every evt.type == :draw {
+                        pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
+                    }
+                }
+            }
+        }
+    }
+}
+
+spawn {
+    par {
+        toggle evt.type==:pause -> evt.type==:resume {
+            var birds = coroutines(5)
+            par {
+                every 500ms {
+                    (spawn in birds, Bird(y,s)) where {
+                        var y = (`:number rand()` % 480) - 240
+                        var s = 100 + (`:number rand()` % 100)
+                    }
+                }
+            } with {
+                every evt.type == :frame {
+                    while b1 in birds {
+                        while b2 in birds {
+                            if b1 /= b2 {
+                                var r1 = [b1.pub.0,b1.pub.1,b1.pub.2,b1.pub.3]
+                                var r2 = [b2.pub.0,b2.pub.2,b2.pub.2,b2.pub.3]
+                                if pico_rect_vs_rect?(r1,r2) {
+                                    broadcast in b1, @[ (:type,:collided) ]
+                                    broadcast in b2, @[ (:type,:collided) ]
+                                }
+                            }
+                        }
+                    }
+                }
+            } with {
+                while true {
+                    var bird
+                    every evt.type == :mousebuttondown {
+                        while b in birds {
+                            var pt = [evt.x, evt.y]
+                            if pico_point_vs_rect?(pt,b.pub) {
+                                set bird = track b
+                                break
+                            }
+                        }
+                    }
+                    awaiting not bird {
+                        pico_output_draw_line([0,-240], [bird.pub.x,bird.pub.y]);
+                    }
+                }
+            }
+        }
+    } with {
+        while true {
+            await evt.type==:keydown and evt.sym==`:number SDLK_p`
+            broadcast in :global, @[(:type,:pause)]
+            awaiting evt.type==:keydown and evt.sym==`:number SDLK_p` {
+                every evt.type == :draw {
+                    pico_output_draw_image(0,0, `:pointer "res/pause.png"`);
+                }
+            }
+            broadcast in :global, @[(:type,:resume)]
+        }
+    }
+}
+
+pico_loop ()
