@@ -13,16 +13,16 @@ task Bird (y,speed) {
     set pub = [(-win.0)/2, y, 100, 90]
     var sin = 0
     awaiting pub.0 > 320 {
-        awaiting evt.type == :collided {
+        awaiting evt_type? (:collided) {
             par {
-                every evt.type == :frame {
+                every evt_type? (:frame) {
                     var v = evt.dt * speed
                     set pub.0 = pub.0 + (v/1000)
                     set pub.1 = y + ((speed/5) * `:number sin($sin.Number)`)
                     set sin = sin + (3.14*v/100000)
                 }
             } with {
-                every evt.type == :draw {
+                every evt_type? (:draw) {
                     if `:number ((int)(($sin.Number+(3.14/2))/3.14))` % 2 == 0 {
                         pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_up.png"`);
                     } else {
@@ -33,11 +33,11 @@ task Bird (y,speed) {
         }
         awaiting pub.1 < -200 {
             par {
-                every evt.type == :frame {
+                every evt_type? (:frame) {
                     set pub.1 = pub.1 - (evt.dt * 0.5)
                 }
             } with {
-                every evt.type == :draw {
+                every evt_type? (:draw) {
                     pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
                 }
             }
@@ -51,8 +51,8 @@ task Bird (y,speed) {
                     await 100ms
                 }
             } with {
-                toggle evt.type==:hide -> evt.type==:show {
-                    every evt.type == :draw {
+                toggle evt_type? (:hide) -> evt_type? (:show) {
+                    every evt_type? (:draw) {
                         pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
                     }
                 }
@@ -63,7 +63,7 @@ task Bird (y,speed) {
 
 spawn {
     par {
-        toggle evt.type==:pause -> evt.type==:resume {
+        toggle evt_type? (:pause) -> evt_type? (:resume) {
             var birds = coroutines(5)
             par {
                 every 500ms {
@@ -73,12 +73,12 @@ spawn {
                     }
                 }
             } with {
-                every evt.type == :frame {
-                    while b1 in birds {
-                        while b2 in birds {
+                every evt_type? (:frame) {
+                    while in birds, b1 {
+                        while in birds, b2 {
                             if b1 /= b2 {
                                 var r1 = [b1.pub.0,b1.pub.1,b1.pub.2,b1.pub.3]
-                                var r2 = [b2.pub.0,b2.pub.2,b2.pub.2,b2.pub.3]
+                                var r2 = [b2.pub.0,b2.pub.1,b2.pub.2,b2.pub.3]
                                 if pico_rect_vs_rect?(r1,r2) {
                                     broadcast in b1, @[ (:type,:collided) ]
                                     broadcast in b2, @[ (:type,:collided) ]
@@ -89,28 +89,31 @@ spawn {
                 }
             } with {
                 while true {
-                    var bird
-                    every evt.type == :mousebuttondown {
-                        while b in birds {
-                            var pt = [evt.x, evt.y]
-                            if pico_point_vs_rect?(pt,b.pub) {
-                                set bird = track b
-                                break
+                    var bird = catch true {
+                        every evt_type? (:mousebuttondown) {
+                            while in birds, b {
+                                var pt = [evt.x, evt.y]
+                                var r  = [b.pub.0,b.pub.1,b.pub.2,b.pub.3]
+                                if pico_point_vs_rect?(pt,r) {
+                                    throw track b
+                                }
                             }
                         }
                     }
-                    awaiting not bird {
-                        pico_output_draw_line([0,-240], [bird.pub.x,bird.pub.y]);
+                    awaiting bird.status==:destroyed {
+                        every evt_type? (:draw) {
+                            pico_output_draw_line([0,-240], [bird.pub.0,bird.pub.1])
+                        }
                     }
                 }
             }
         }
     } with {
         while true {
-            await evt.type==:keydown and evt.sym==`:number SDLK_p`
+            await evt_type? (:keydown) and evt.sym==`:number SDLK_p`
             broadcast in :global, @[(:type,:pause)]
-            awaiting evt.type==:keydown and evt.sym==`:number SDLK_p` {
-                every evt.type == :draw {
+            awaiting evt_type? (:keydown) and evt.sym==`:number SDLK_p` {
+                every evt_type? (:draw) {
                     pico_output_draw_image(0,0, `:pointer "res/pause.png"`);
                 }
             }
