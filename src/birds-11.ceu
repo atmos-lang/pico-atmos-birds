@@ -1,6 +1,6 @@
 ^["pico.ceu"]
 
-pico_state_set_title(`:pointer "Birds - 11 (tracking)"`)
+pico_state_set_title("Birds - 11 (tracking)")
 pico_state_set_size(640,480)
 pico_state_set_size_pixel(1,1)
 pico_state_set_grid(false)
@@ -24,9 +24,9 @@ task Bird (y,speed) {
             } with {
                 every evt_type? (:draw) {
                     if `:number ((int)(($sin.Number+(3.14/2))/3.14))` % 2 == 0 {
-                        pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_up.png"`);
+                        pico_output_draw_image(pub.0,pub.1, "res/clumsy_up.png");
                     } else {
-                        pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
+                        pico_output_draw_image(pub.0,pub.1, "res/clumsy_dn.png");
                     }
                 }
             }
@@ -38,7 +38,7 @@ task Bird (y,speed) {
                 }
             } with {
                 every evt_type? (:draw) {
-                    pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
+                    pico_output_draw_image(pub.0,pub.1, "res/clumsy_dn.png");
                 }
             }
         }
@@ -53,7 +53,7 @@ task Bird (y,speed) {
             } with {
                 toggle evt_type? (:hide) -> evt_type? (:show) {
                     every evt_type? (:draw) {
-                        pico_output_draw_image(pub.0,pub.1, `:pointer "res/clumsy_dn.png"`);
+                        pico_output_draw_image(pub.0,pub.1, "res/clumsy_dn.png");
                     }
                 }
             }
@@ -95,7 +95,7 @@ spawn {
                                 var pt = [evt.x, evt.y]
                                 var r  = [b.pub.0,b.pub.1,b.pub.2,b.pub.3]
                                 if pico_point_vs_rect?(pt,r) {
-                                    throw track b
+                                    throw(track(b))
                                 }
                             }
                         }
@@ -114,7 +114,7 @@ spawn {
             broadcast in :global, @[(:type,:pause)]
             awaiting evt_type? (:keydown) and evt.sym==`:number SDLK_p` {
                 every evt_type? (:draw) {
-                    pico_output_draw_image(0,0, `:pointer "res/pause.png"`);
+                    pico_output_draw_image(0,0, "res/pause.png");
                 }
             }
             broadcast in :global, @[(:type,:resume)]
