@@ -76,7 +76,7 @@ spawn {
                 every :frame {
                     while in birds, b1 {
                         while in birds, b2 {
-                            if b1 /= b2 {
+                            if (b1.pub/=nil) and (b2.pub/=nil) and (b1/=b2) {
                                 var r1 = [b1.pub.0,b1.pub.1,b1.pub.2,b1.pub.3]
                                 var r2 = [b2.pub.0,b2.pub.1,b2.pub.2,b2.pub.3]
                                 if pico_rect_vs_rect?(r1,r2) {
