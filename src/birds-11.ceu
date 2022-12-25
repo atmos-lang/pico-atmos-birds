@@ -100,7 +100,7 @@ spawn {
                             }
                         }
                     }
-                    awaiting bird.status==:destroyed {
+                    awaiting bird {
                         every :draw {
                             pico_output_draw_line([0,-240], [bird.pub.0,bird.pub.1])
                         }
