@@ -76,12 +76,12 @@ spawn {
                 every :frame {
                     while in :coros birds, b1 {
                         while in :coros birds, b2 {
-                            if (b1.pub/=nil) and (b2.pub/=nil) and (b1/=b2) {
-                                var r1 = copy(b1.pub)
-                                var r2 = copy(b2.pub)
+                            if detrack(b1) and (detrack(b1) /= detrack(b2)) {
+                                var r1 = copy(detrack(b1).pub)
+                                var r2 = copy(detrack(b2).pub)
                                 if pico_rect_vs_rect?(r1,r2) {
-                                    broadcast in b1, tags([], :collided, true)
-                                    broadcast in b2, tags([], :collided, true)
+                                    broadcast in detrack(b1), tags([], :collided, true)
+                                    broadcast in detrack(b2), tags([], :collided, true)
                                 }
                             }
                         }
@@ -93,16 +93,16 @@ spawn {
                         every :mousebuttondown {
                             while in :coros birds, b {
                                 var pt = [evt.0, evt.1]
-                                var r  = copy(b.pub)
+                                var r  = copy(detrack(b).pub)
                                 if pico_point_vs_rect?(pt,r) {
-                                    throw(track(b))
+                                    throw(b)
                                 }
                             }
                         }
                     }
                     awaiting bird {
                         every :draw {
-                            pico_output_draw_line([0,-240], [bird.pub.0,bird.pub.1])
+                            pico_output_draw_line([0,-240], copy(detrack(bird).pub))
                         }
                     }
                 }
