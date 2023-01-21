@@ -1,59 +1,59 @@
 ^["pico.ceu"]
 
-pico_state_set_title("Birds - 11 (tracking)")
-pico_state_set_size(640,480)
-pico_state_set_size_pixel(1,1)
-pico_state_set_grid(false)
-pico_state_set_color_clear(0,0,0,255)
-pico_state_set_color_draw(255,255,255,255)
+pico-state-set-title("Birds - 11 (tracking)")
+pico-state-set-size(640,480)
+pico-state-set-size-pixel(1,1)
+pico-state-set-grid(false)
+pico-state-set-color-clear(0,0,0,255)
+pico-state-set-color-draw(255,255,255,255)
 
-var win = pico_state_get_size()
+var win :XY = pico-state-get-size()
 
-task Bird (y,speed) :awakes {
-    set task.pub = [(-win.0)/2, y, 100, 90]
+task Bird (y,speed) {
+    set task.pub = [(-win.x)/2, y, 100, 90]
     var sin = 0
     awaiting task.pub.0 > 320 {
         awaiting :collided {
             par {
-                every :frame {
+                every :Pico.Frame {
                     var v = evt.0 * speed
                     set task.pub.0 = task.pub.0 + (v/1000)
                     set task.pub.1 = y + ((speed/5) * `:number sin($sin.Number)`)
                     set sin = sin + ((3.14*v)/100000)
                 }
             } with {
-                every :draw {
+                every :Pico.Draw {
                     if (`:number ((int)((($sin.Number+(3.14/2)))/3.14))` % 2) == 0 {
-                        pico_output_draw_image(task.pub.0,task.pub.1, "res/clumsy_up.png");
+                        pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_up.png");
                     } else {
-                        pico_output_draw_image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
+                        pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
                     }
                 }
             }
         }
         awaiting task.pub.1 < -200 {
             par {
-                every :frame {
+                every :Pico.Frame {
                     set task.pub.1 = task.pub.1 - (evt.0 * 0.5)
                 }
             } with {
-                every :draw {
-                    pico_output_draw_image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
+                every :Pico.Draw {
+                    pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
                 }
             }
         }
-        awaiting 1s {
+        awaiting 1:s {
             par {
                 while true {
-                    broadcast in :task, tags([], :hide, true)
-                    await 100ms
-                    broadcast in :task, tags([], :show, true)
-                    await 100ms
+                    broadcast in :task, :Hide []
+                    await 100:ms
+                    broadcast in :task, :Show []
+                    await 100:ms
                 }
             } with {
-                toggle :hide -> :show {
-                    every :draw {
-                        pico_output_draw_image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
+                toggle :Hide -> :Show {
+                    every :Pico.Draw {
+                        pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
                     }
                 }
             }
@@ -63,23 +63,21 @@ task Bird (y,speed) :awakes {
 
 spawn {
     par {
-        toggle :pause -> :resume {
-            var birds = coroutines(5)
+        toggle :Pause -> :Resume {
+            var birds = tasks(5)
             par {
-                every 500ms {
+                every 500:ms {
                     (spawn in birds, Bird(y,s)) where {
-                        var y = (`:number rand()` % 480) - 240
-                        var s = 100 + (`:number rand()` % 100)
+                        var y = (random-next() % 480) - 240
+                        var s = 100 + (random-next() % 100)
                     }
                 }
             } with {
-                every :frame {
-                    while in :coros birds, b1 {
-                        while in :coros birds, b2 {
-                            if detrack(b1) and (detrack(b1) /= detrack(b2)) {
-                                var r1 = copy(detrack(b1).pub)
-                                var r2 = copy(detrack(b2).pub)
-                                if pico_rect_vs_rect?(r1,r2) {
+                every :Pico.Frame {
+                    while in :tasks birds, b1 {
+                        while in :tasks birds, b2 {
+                            if detrack(b1).status and (detrack(b1) /= detrack(b2)) {
+                                if pico-rect-vs-rect?(detrack(b1).pub,detrack(b2).pub) {
                                     broadcast in detrack(b1), tags([], :collided, true)
                                     broadcast in detrack(b2), tags([], :collided, true)
                                 }
@@ -90,19 +88,18 @@ spawn {
             } with {
                 while true {
                     var bird = catch true {
-                        every :mousebuttondown {
-                            while in :coros birds, b {
+                        every :Pico.Mouse.Button.Dn {
+                            while in :tasks birds, b {
                                 var pt = [evt.0, evt.1]
-                                var r  = copy(detrack(b).pub)
-                                if pico_point_vs_rect?(pt,r) {
+                                if pico-point-vs-rect?(pt,detrack(b).pub) {
                                     throw(b)
                                 }
                             }
                         }
                     }
                     awaiting bird {
-                        every :draw {
-                            pico_output_draw_line([0,-240], copy(detrack(bird).pub))
+                        every :Pico.Draw {
+                            pico-output-draw-line([0,-240], detrack(bird).pub)
                         }
                     }
                 }
@@ -110,16 +107,16 @@ spawn {
         }
     } with {
         while true {
-            await (evt is :keydown) and (evt.1 == :Key.P)
-            broadcast in :global, tags([], :pause, true)
-            awaiting (evt is :keydown) and (evt.1 == :Key.P) {
+            await :Pico.Key.Dn, (evt.key == :Key-P)
+            broadcast in :global, :Pause []
+            awaiting :Pico.Key.Dn, (evt.key == :Key-P) {
                 every :draw {
-                    pico_output_draw_image(0,0, "res/pause.png");
+                    pico-output-draw-image(0,0, "res/pause.png");
                 }
             }
-            broadcast in :global, tags([], :resume, true)
+            broadcast in :global, :Resume []
         }
     }
 }
 
-pico_loop ()
+pico-loop ()
