@@ -90,8 +90,7 @@ spawn {
                     var bird = catch true {
                         every :Pico.Mouse.Button.Dn {
                             while in :tasks birds, b {
-                                var pt = [evt.0, evt.1]
-                                if pico-point-vs-rect?(pt,detrack(b).pub) {
+                                if pico-point-vs-rect?(evt.pos,detrack(b).pub) {
                                     throw(b)
                                 }
                             }
