@@ -10,35 +10,35 @@ pico-state-set-color-draw(255,255,255,255)
 var win :XY = pico-state-get-size()
 
 task Bird (y,speed) {
-    set task.pub = [(-win.x)/2, y, 100, 90]
+    set task.pub = [[(-win.x)/2,y], [100,90]]
     var sin = 0
-    awaiting task.pub.0 > 320 {
+    awaiting task.pub.0.0 > 320 {
         awaiting :collided {
             par {
                 every :Pico.Frame {
                     var v = evt.0 * speed
-                    set task.pub.0 = task.pub.0 + (v/1000)
-                    set task.pub.1 = y + ((speed/5) * `:number sin($sin.Number)`)
+                    set task.pub.0.0 = task.pub.0.0 + (v/1000)
+                    set task.pub.0.1 = y + ((speed/5) * `:number sin($sin.Number)`)
                     set sin = sin + ((3.14*v)/100000)
                 }
             } with {
                 every :Pico.Draw {
                     if (`:number ((int)((($sin.Number+(3.14/2)))/3.14))` % 2) == 0 {
-                        pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_up.png");
+                        pico-output-draw-image(task.pub.0.0,task.pub.0.1, "res/clumsy_up.png");
                     } else {
-                        pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
+                        pico-output-draw-image(task.pub.0.0,task.pub.0.1, "res/clumsy_dn.png");
                     }
                 }
             }
         }
-        awaiting task.pub.1 < -200 {
+        awaiting task.pub.0.1 < -200 {
             par {
                 every :Pico.Frame {
-                    set task.pub.1 = task.pub.1 - (evt.0 * 0.5)
+                    set task.pub.0.1 = task.pub.0.1 - (evt.0 * 0.5)
                 }
             } with {
                 every :Pico.Draw {
-                    pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
+                    pico-output-draw-image(task.pub.0.0,task.pub.0.1, "res/clumsy_dn.png");
                 }
             }
         }
@@ -53,7 +53,7 @@ task Bird (y,speed) {
             } with {
                 toggle :Hide -> :Show {
                     every :Pico.Draw {
-                        pico-output-draw-image(task.pub.0,task.pub.1, "res/clumsy_dn.png");
+                        pico-output-draw-image(task.pub.0.0,task.pub.0.1, "res/clumsy_dn.png");
                     }
                 }
             }
@@ -98,7 +98,7 @@ spawn {
                     }
                     awaiting bird {
                         every :Pico.Draw {
-                            pico-output-draw-line([0,-240], detrack(bird).pub)
+                            pico-output-draw-line([0,-240], detrack(bird).pub.0)
                         }
                     }
                 }
