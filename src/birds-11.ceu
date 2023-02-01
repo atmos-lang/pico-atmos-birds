@@ -7,16 +7,16 @@ pico-state-set-grid(false)
 pico-state-set-color-clear([0,0,0,255])
 pico-state-set-color-draw([255,255,255,255])
 
-var win :XY = pico-state-get-size()
+val WIN :XY = pico-state-get-size()
 
 task Bird (y,speed) :Rect {
-    set task.pub = [[(-win.x)/2,y], [100,90]]
+    set task.pub = [[(-WIN.x)/2,y], [100,90]]
     var sin = 0
     awaiting task.pub.pos.x > 320 {
         awaiting :collided {
             par {
                 every :Pico.Frame {
-                    var v = evt.0 * speed
+                    val v = evt.0 * speed
                     set task.pub.pos.x = task.pub.pos.x + (v/1000)
                     set task.pub.pos.y = y + ((speed/5) * `:number sin($sin.Number)`)
                     set sin = sin + ((3.14*v)/100000)
@@ -64,12 +64,12 @@ task Bird (y,speed) :Rect {
 spawn {
     par {
         toggle :Pause -> :Resume {
-            var birds = tasks(5)
+            val birds = tasks(5)
             par {
                 every 500:ms {
                     (spawn in birds, Bird(y,s)) where {
-                        var y = (random-next() % 480) - 240
-                        var s = 100 + (random-next() % 100)
+                        val y = (random-next() % 480) - 240
+                        val s = 100 + (random-next() % 100)
                     }
                 }
             } with {
@@ -87,7 +87,7 @@ spawn {
                 }
             } with {
                 while true {
-                    var bird = catch true {
+                    val bird = catch true {
                         every :Pico.Mouse.Button.Dn {
                             while in :tasks birds, b {
                                 if pico-point-vs-rect?(evt.pos,detrack(b).pub) {
