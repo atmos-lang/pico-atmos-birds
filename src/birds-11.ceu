@@ -44,7 +44,7 @@ task Bird (y,speed) :Rect {
         }
         awaiting 1:s {
             par {
-                while true {
+                loop {
                     broadcast in :task, :Hide []
                     await 100:ms
                     broadcast in :task, :Show []
@@ -74,8 +74,8 @@ spawn {
                 }
             } with {
                 every :Pico.Frame {
-                    while in :tasks birds, b1 {
-                        while in :tasks birds, b2 {
+                    loop in :tasks birds, b1 {
+                        loop in :tasks birds, b2 {
                             if detrack(b1).status and (detrack(b1) /= detrack(b2)) {
                                 if pico-rect-vs-rect?(detrack(b1).pub,detrack(b2).pub) {
                                     broadcast in detrack(b1), tags([], :collided, true)
@@ -86,10 +86,10 @@ spawn {
                     }
                 }
             } with {
-                while true {
+                loop {
                     val bird = catch true {
                         every :Pico.Mouse.Button.Dn {
-                            while in :tasks birds, b {
+                            loop in :tasks birds, b {
                                 if pico-point-vs-rect?(evt.pos,detrack(b).pub) {
                                     throw(b)
                                 }
@@ -105,11 +105,11 @@ spawn {
             }
         }
     } with {
-        while true {
+        loop {
             await :Pico.Key.Dn, (evt.key == :Key-P)
             broadcast in :global, :Pause []
             awaiting :Pico.Key.Dn, (evt.key == :Key-P) {
-                every :draw {
+                every :Pico.Draw {
                     pico-output-draw-image([0,0], "res/pause.png");
                 }
             }
