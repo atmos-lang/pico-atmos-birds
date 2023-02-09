@@ -1,4 +1,4 @@
-^["pico.ceu"]
+^["@/pico/pico.ceu"]
 
 pico-state-set-title("Birds - 11 (tracking)")
 pico-state-set-size([640,480])
