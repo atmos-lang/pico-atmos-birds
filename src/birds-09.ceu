@@ -1,58 +1,56 @@
-^["pico.ceu"]
+^["@/pico/pico.ceu"]
 
-pico_state_set_title("Birds - 09 (blink)")
-pico_state_set_size(640,480)
-pico_state_set_size_pixel(1,1)
-pico_state_set_grid(false)
-pico_state_set_color_clear(0,0,0,255)
+pico-state-set-title("Birds - 09 (blink)")
+pico-state-set-size([640,480])
+pico-state-set-size-pixel([1,1])
+pico-state-set-grid(false)
+pico-state-set-color-clear([0,0,0,255])
+pico-state-set-color-draw([255,255,255,255])
 
-var win = pico_state_get_size()
+val WIN :XY = pico-state-get-size()
 
-task Bird (y,speed) {
-    set pub = [(-win.0)/2, y, 100, 90]
+data :Bird = [alive,rect:Rect]
+
+task Bird (y,speed) :Bird {
+    set task.pub = [true, [[(-WIN.x)/2,y], [100,90]]]
     var sin = 0
-    awaiting pub.0 > 320 {
-        awaiting :collided {
+    awaiting (task.pub.rect.pos.x > (WIN.x/2)) {
+        awaiting (evt is? :collided) {
             par {
-                every :frame {
-                    var v = evt.0 * speed
-                    set pub.0 = pub.0 + (v/1000)
-                    set pub.1 = y + ((speed/5) * `:number sin($sin.Number)`)
-                    set sin = sin + (3.14*v/100000)
+                every :Pico.Frame {
+                    val v = evt.ms * speed
+                    set task.pub.rect.pos.x = task.pub.rect.pos.x + (v/1000)
+                    set task.pub.rect.pos.y = y + ((speed/5) * `:number sin($sin.Number)`)
+                    set sin = sin + ((3.14*v)/100000)
                 }
             } with {
-                every :draw {
-                    if `:number ((int)(($sin.Number+(3.14/2))/3.14))` % 2 == 0 {
-                        pico_output_draw_image(pub.0,pub.1, "res/clumsy_up.png");
+                every :Pico.Draw {
+                    if (`:number ((int)((($sin.Number+(3.14/2)))/3.14))` % 2) == 0 {
+                        pico-output-draw-image(task.pub.rect.pos, "res/clumsy_up.png");
                     } else {
-                        pico_output_draw_image(pub.0,pub.1, "res/clumsy_dn.png");
+                        pico-output-draw-image(task.pub.rect.pos, "res/clumsy_dn.png");
                     }
                 }
             }
         }
-        awaiting pub.1 < -200 {
+        set task.pub.alive = false
+        awaiting task.pub.rect.pos.y < -((WIN.y/2) - 45) {
             par {
-                every :frame {
-                    set pub.1 = pub.1 - (evt.0 * 0.5)
+                every :Pico.Frame {
+                    set task.pub.rect.pos.y = task.pub.rect.pos.y - (evt.ms * 0.5)
                 }
             } with {
-                every :draw {
-                    pico_output_draw_image(pub.0,pub.1, "res/clumsy_dn.png");
+                every :Pico.Draw {
+                    pico-output-draw-image(task.pub.rect.pos, "res/clumsy_dn.png");
                 }
             }
         }
-        awaiting 1s {
-            par {
-                while true {
-                    broadcast in :task, tags([], :hide, true)
-                    await 100ms
-                    broadcast in :task, tags([], :show, true)
-                    await 100ms
-                }
-            } with {
-                toggle :hide -> :show {
-                    every :draw {
-                        pico_output_draw_image(pub.0,pub.1, "res/clumsy_dn.png");
+        awaiting 1:s {
+            loop {
+                await 100:ms
+                awaiting 100:ms {
+                    every :Pico.Draw {
+                        pico-output-draw-image(task.pub.rect.pos, "res/clumsy_dn.png");
                     }
                 }
             }
@@ -61,25 +59,29 @@ task Bird (y,speed) {
 }
 
 spawn {
-    var birds = coroutines(5)
+    val birds = tasks(5)
     par {
-        every 500ms {
+        every 500:ms {
             (spawn in birds, Bird(y,s)) where {
-                var y = (`:number rand()` % 480) - 240
-                var s = 100 + (`:number rand()` % 100)
+                val y = -(WIN.y/2) + (`:number rand()` % WIN.y)
+                val s = 100 + (`:number rand()` % 100)
             }
         }
     } with {
-        every :frame {
-            while in birds, b1 {
-                while in birds, b2 {
-                    if (b1.pub/=nil) and (b2.pub/=nil) and (b1/=b2) {
-                        var r1 = [b1.pub.0,b1.pub.1,b1.pub.2,b1.pub.3]
-                        var r2 = [b2.pub.0,b2.pub.1,b2.pub.2,b2.pub.3]
-                        if pico_rect_vs_rect?(r1,r2) {
-                            broadcast in b1, tags([], :collided, true)
-                            broadcast in b2, tags([], :collided, true)
-                        }
+        every :Pico.Frame {
+            loop in :tasks birds, b1 {
+                loop in :tasks birds, b2 {
+                    val ok = do {
+                        val :tmp t1 :Bird = detrack(b1)
+                        val :tmp t2 :Bird = detrack(b2)
+                        (t1 /= t2) and
+                        ((t1 and t1.pub.alive) and
+                        ((t2 and t2.pub.alive) and
+                        pico-rect-vs-rect?(t1.pub.rect, t2.pub.rect)))
+                    }
+                    if ok {
+                        broadcast in detrack(b1), :collided
+                        broadcast in detrack(b2), :collided
                     }
                 }
             }
@@ -87,4 +89,4 @@ spawn {
     }
 }
 
-pico_loop ()
+pico-loop ()
