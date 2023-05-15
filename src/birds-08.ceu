@@ -62,8 +62,8 @@ spawn {
             loop in :tasks birds, b1 {
                 loop in :tasks birds, b2 {
                     val ok = do {
-                        val :tmp t1 :Bird = detrack(b1)
-                        val :tmp t2 :Bird = detrack(b2)
+                        val t1 :Bird = detrack(b1)
+                        val t2 :Bird = detrack(b2)
                         (t1 /= t2) and
                         ((t1 and t1.pub.alive) and
                         ((t2 and t2.pub.alive) and
