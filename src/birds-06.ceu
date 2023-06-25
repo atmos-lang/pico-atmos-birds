@@ -7,6 +7,8 @@ pico-state-set-grid(false)
 pico-state-set-color-clear([0,0,0,255])
 pico-state-set-color-draw([255,255,255,255])
 
+random-seed()
+
 val WIN :XY = pico-state-get-size()
 
 task Bird (y,speed) {
@@ -39,8 +41,8 @@ spawn {
             val birds = tasks(5)
             every 500:ms {
                 (spawn in birds, Bird(y,s)) where {
-                    val y = -(WIN.y/2) + (`:number rand()` % WIN.y)
-                    val s = 100 + (`:number rand()` % 100)
+                    val y = -(WIN.y/2) + (random-next() % WIN.y)
+                    val s = 100 + (random-next() % 100)
                 }
             }
         }
