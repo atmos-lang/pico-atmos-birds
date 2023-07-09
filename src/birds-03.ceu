@@ -1,11 +1,11 @@
 ^["@/pico/pico.ceu"]
 
-pico-state-set-title("Birds - 03 (pool)")
-pico-state-set-size([640,480])
-pico-state-set-size-pixel([1,1])
-pico-state-set-grid(false)
-pico-state-set-color-clear([0,0,0,255])
-pico-state-set-color-draw([255,255,255,255])
+pico-state-set-title        <- "Birds - 03 (pool)"
+pico-state-set-size         <- [640,480]
+pico-state-set-size-pixel   <- [1,1]
+pico-state-set-grid         <- false
+pico-state-set-color-clear  <- [0,0,0,255]
+pico-state-set-color-draw   <- [255,255,255,255]
 
 val WIN :XY = pico-state-get-size()
 
@@ -22,19 +22,17 @@ task Bird (y,speed) {
         }
     } with {
         every :Pico.Draw {
-            if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0 {
-                pico-output-draw-image([xx,yy], "res/clumsy_up.png");
-            } else {
-                pico-output-draw-image([xx,yy], "res/clumsy_dn.png");
-            }
+            if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0
+                => pico-output-draw-image([xx,yy], "res/clumsy_up.png");
+                => pico-output-draw-image([xx,yy], "res/clumsy_dn.png");
         }
     }
 }
 
 spawn {
     val birds = tasks()
-    loop in [1 -> 5), i {
-        (spawn in birds, Bird(y,s)) where {
+    loop i in {1 => 5{ {
+        spawn in birds, Bird(y,s) where {
             val y = -(WIN.y/2) + (100*i)
             val s = 100 + (10*i)
         }
