@@ -93,7 +93,7 @@ spawn {
                     val bird = catch true {
                         every :Pico.Mouse.Button.Dn {
                             loop b in :tasks birds {
-                                if pico-point-vs-rect?(evt.pos, detrack(b).(:Bird).pub.rect) {
+                                if pico-point-vs-rect?(evt.pos, detrack(b).pub.(:Bird).rect) {
                                     throw(move(b))
                                 }
                             }
@@ -101,7 +101,7 @@ spawn {
                     }
                     awaiting bird {
                         every :Pico.Draw {
-                            pico-output-draw-line([0,-240], detrack(bird).(:Bird).pub.rect.pos)
+                            pico-output-draw-line([0,-240], detrack(bird).pub.(:Bird).rect.pos)
                         }
                     }
                 }
