@@ -186,40 +186,35 @@ spawn (task () {
                 }
             }) ()
             spawn (task () {
-                val bird =
-                    xloop {
-                        xbreak if yield(nil) { as evt :Pico.Mouse.Button.Dn =>
-                            if is?(evt, :Pico.Mouse.Button.Dn) {
-                                var b = nil
-                                xloop {
-                                    set b = next(birds, b)
-                                    xbreak(false) if b==nil
-                                    xbreak(drop(b)) if detrack(b) { as x :Bird =>
-                                        pico-point-vs-rect?(evt.pos, pub(x).rect)
+                xloop {
+                    val bird =
+                        xloop {
+                            xbreak if yield(nil) { as evt :Pico.Mouse.Button.Dn =>
+                                if is?(evt, :Pico.Mouse.Button.Dn) {
+                                    var b = nil
+                                    xloop {
+                                        set b = next(birds, b)
+                                        xbreak(false) if b==nil
+                                        xbreak(drop(b)) if detrack(b) { as x :Bird =>
+                                            pico-point-vs-rect?(evt.pos, pub(x).rect)
+                                        }
                                     }
+                                } else {
+                                    nil
                                 }
-                            } else {
-                                nil
                             }
                         }
-                    }
-println(:bird, bird)
-                xloop {
-                    xbreak if yield(nil) { as it =>
-if type(it) == :exe-task {
-    println(:xxx, bird, it)
-} else { nil }
-                        if it == bird {
-                            true
-                        } else {
+    println(:bird, bird)
+                    xloop {
+                        xbreak if nil == yield(nil) { as it =>
                             if is?(it, :Pico.Draw) {
                                 detrack(bird) { as x :Bird =>
                                     pico-output-draw-line([0,-240], pub(x).rect.pos)
+                                    true
                                 }
                             } else {
-                                nil
+                                true
                             }
-                            false
                         }
                     }
                 }
