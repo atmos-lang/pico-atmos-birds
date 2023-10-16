@@ -102,7 +102,7 @@ val Bird = task (t) :Bird {
                     }
                     spawn (task () :void {
                         xloop {
-                            xbreak if yield(nil) { as it =>
+                            yield(nil) { as it =>
                                 if is?(it, :Pico.Draw) {
                                     pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png")
                                 } else {
@@ -135,111 +135,119 @@ val Bird = task (t) :Bird {
 }
 
 spawn (task () {
-    spawn (task () {
-        ;;toggle :pause => :resume {
-            val birds = tasks(5)
-            spawn (task () {
-                xloop {
-                    do {
-                        val awt = spawn Delay(500)
-                        xloop {
-                            xbreak if yield(nil) { as it => it==awt }
-                        }
-                    }
-                    val y = -(WIN.y/2) + (random-next() % WIN.y)
-                    val s = 100 + (random-next() % 100)
-                    spawn Bird([y,s]) in birds
-                }
-            }) ()
-            spawn (task () {
-                xloop {
-                    xloop { ;; AWAIT
-                        xbreak if yield(nil) { as it =>
-                            is?(it, :Pico.Frame)
-                        }
-                    }
-                    var b1 = nil
+    val game = spawn (task () {
+        val birds = tasks(5)
+        spawn (task () {
+            xloop {
+                do {
+                    val awt = spawn Delay(500)
                     xloop {
-                        set b1 = next(birds, b1)
-                        xbreak if b1==nil
-                        var b2 = nil
-                        xloop {
-                            set b2 = next(birds, b2)
-                            xbreak if b2==nil
-                            val col? =
-                                detrack(b1) { as x1 :Bird =>
-                                    detrack(b2) { as x2 :Bird =>
-                                        (x1 /= x2)      &&
-                                        (pub(x1).alive) &&
-                                        (pub(x2).alive) &&
-                                        pico-rect-vs-rect?(pub(x1).rect, pub(x2).rect)
+                        xbreak if yield(nil) { as it => it==awt }
+                    }
+                }
+                val y = -(WIN.y/2) + (random-next() % WIN.y)
+                val s = 100 + (random-next() % 100)
+                spawn Bird([y,s]) in birds
+            }
+        }) ()
+        spawn (task () {
+            xloop {
+                xloop { ;; AWAIT
+                    xbreak if yield(nil) { as it =>
+                        is?(it, :Pico.Frame)
+                    }
+                }
+                var b1 = nil
+                xloop {
+                    set b1 = next(birds, b1)
+                    xbreak if b1==nil
+                    var b2 = nil
+                    xloop {
+                        set b2 = next(birds, b2)
+                        xbreak if b2==nil
+                        val col? =
+                            detrack(b1) { as x1 :Bird =>
+                                detrack(b2) { as x2 :Bird =>
+                                    (x1 /= x2)      &&
+                                    (pub(x1).alive) &&
+                                    (pub(x2).alive) &&
+                                    pico-rect-vs-rect?(pub(x1).rect, pub(x2).rect)
+                                }
+                            }
+                        if col? {
+                            broadcast(:collided) in b1
+                            broadcast(:collided) in b2
+                        } else {
+                            nil
+                        }
+                    }
+                }
+            }
+        }) ()
+        spawn (task () {
+            xloop {
+                val bird =
+                    xloop {
+                        xbreak if yield(nil) { as evt :Pico.Mouse.Button.Dn =>
+                            if is?(evt, :Pico.Mouse.Button.Dn) {
+                                var b = nil
+                                xloop {
+                                    set b = next(birds, b)
+                                    xbreak(false) if b==nil
+                                    xbreak(drop(b)) if detrack(b) { as x :Bird =>
+                                        pico-point-vs-rect?(evt.pos, pub(x).rect)
                                     }
                                 }
-                            if col? {
-                                broadcast(:collided) in b1
-                                broadcast(:collided) in b2
                             } else {
                                 nil
                             }
                         }
                     }
-                }
-            }) ()
-            spawn (task () {
+println(:bird, bird)
                 xloop {
-                    val bird =
-                        xloop {
-                            xbreak if yield(nil) { as evt :Pico.Mouse.Button.Dn =>
-                                if is?(evt, :Pico.Mouse.Button.Dn) {
-                                    var b = nil
-                                    xloop {
-                                        set b = next(birds, b)
-                                        xbreak(false) if b==nil
-                                        xbreak(drop(b)) if detrack(b) { as x :Bird =>
-                                            pico-point-vs-rect?(evt.pos, pub(x).rect)
-                                        }
-                                    }
-                                } else {
-                                    nil
-                                }
-                            }
-                        }
-    println(:bird, bird)
-                    xloop {
-                        xbreak if nil == yield(nil) { as it =>
-                            if is?(it, :Pico.Draw) {
-                                detrack(bird) { as x :Bird =>
-                                    pico-output-draw-line([0,-240], pub(x).rect.pos)
-                                    true
-                                }
-                            } else {
+                    xbreak if nil == yield(nil) { as it =>
+                        if is?(it, :Pico.Draw) {
+                            detrack(bird) { as x :Bird =>
+                                pico-output-draw-line([0,-240], pub(x).rect.pos)
                                 true
                             }
+                        } else {
+                            true
                         }
                     }
                 }
-            }) ()
-            xloop {
-                yield(nil) { as it => nil }
             }
-        ;;}
-    }) ()
-    ;;;
-    spawn (task () {
-        loop {
-            await :Pico.Key.Dn, (evt.key == :Key-P)
-            broadcast :pause
-            awaiting :Pico.Key.Dn, (evt.key == :Key-P) {
-                every :Pico.Draw {
-                    pico-output-draw-image([0,0], "res/pause.png");
-                }
-            }
-            broadcast :resume
+        }) ()
+        xloop {
+            yield(nil) { as it => nil }
         }
     }) ()
-    ;;;
     xloop {
-        yield(nil) { as it => nil }
+        xloop { ;; AWAIT
+            xbreak if yield(nil) { as it :Pico.Key.Dn =>
+                if is?(it, :Pico.Key.Dn) {
+                    (it.key == :Key-P)
+                } else {
+                    false
+                }
+            }
+        }
+        toggle game(false)
+        xloop {
+            xbreak if yield(nil) { as it :Pico.Key.Dn =>
+                if is?(it, :Pico.Draw) {
+                    pico-output-draw-image([0,0], "res/pause.png");
+                    false
+                } else {
+                    if is?(it, :Pico.Key.Dn) {
+                        (it.key == :Key-P)
+                    } else {
+                        nil
+                    }
+                }
+            }
+        }
+        toggle game(true)
     }
 }) ()
 
