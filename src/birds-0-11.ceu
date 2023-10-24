@@ -208,8 +208,12 @@ println(:bird, bird)
                     break if nil == yield(nil) thus { as it =>
                         if is?(it, :Pico.Draw) {
                             detrack(bird) thus { as x :Bird =>
-                                pico-output-draw-line([0,-240], pub(x).rect.pos)
-                                true
+                                if x {
+                                    pico-output-draw-line([0,-240], pub(x).rect.pos)
+                                    true
+                                } else {
+                                    nil
+                                }
                             }
                         } else {
                             true
