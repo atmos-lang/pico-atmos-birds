@@ -31,7 +31,7 @@ val WIN :XY = pico-state-get-size()
 val Delay = task (ms) {
     var tot = ms
     loop {
-        break if yield(nil) thus { as it =>
+        break if yield(nil) thus { it =>
             if is?(it,:frame) {
                 set tot = tot - it[0]
                 tot <= 0
@@ -52,7 +52,7 @@ val Bird = task (t) :Bird {
     val Y =
         spawn (task () :void {
             loop {
-                break if yield(nil) thus { as it :Pico.Frame =>
+                break if yield(nil) thus { it :Pico.Frame =>
                     if is?(it, :Pico.Frame) {
                         val v = it.ms * speed
                         set pub().rect.pos.x = pub().rect.pos.x + (v/1000)
@@ -77,7 +77,7 @@ val Bird = task (t) :Bird {
             set pub().alive = false
 
             loop {
-                break if yield(nil) thus { as it :Pico.Frame =>
+                break if yield(nil) thus { it :Pico.Frame =>
                     if is?(it, :Pico.Frame) {
                         set pub().rect.pos.y = pub().rect.pos.y - (it.ms * 0.5)
                         (pub().rect.pos.y < -((WIN.y/2) - 45))
@@ -97,12 +97,12 @@ val Bird = task (t) :Bird {
                     do {
                         val awt = spawn Delay(100)
                         loop {
-                            break if yield(nil) thus { as it => it==awt }
+                            break if yield(nil) thus { it => it==awt }
                         }
                     }
                     spawn (task () :void {
                         loop {
-                            yield(nil) thus { as it =>
+                            yield(nil) thus { it =>
                                 if is?(it, :Pico.Draw) {
                                     pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png")
                                 } else {
@@ -114,7 +114,7 @@ val Bird = task (t) :Bird {
                     do {
                         val awt = spawn Delay(100)
                         loop {
-                            break if yield(nil) thus { as it => it==awt }
+                            break if yield(nil) thus { it => it==awt }
                         }
                     }
                 }
@@ -123,14 +123,14 @@ val Bird = task (t) :Bird {
             do {
                 val awt = spawn Delay(1000)
                 loop {
-                    break if yield(nil) thus { as it => it==awt }
+                    break if yield(nil) thus { it => it==awt }
                 }
             }
         }) ()
 
     loop {
         break if (pub().rect.pos.x > (WIN.x/2))
-        break if yield(nil) thus { as it => (it == Y) }
+        break if yield(nil) thus { it => (it == Y) }
     }
 }
 
@@ -142,7 +142,7 @@ spawn (task () {
                 do {
                     val awt = spawn Delay(500)
                     loop {
-                        break if yield(nil) thus { as it => it==awt }
+                        break if yield(nil) thus { it => it==awt }
                     }
                 }
                 val y = -(WIN.y/2) + (random-next() % WIN.y)
@@ -153,7 +153,7 @@ spawn (task () {
         spawn (task () {
             loop {
                 loop { ;; AWAIT
-                    break if yield(nil) thus { as it =>
+                    break if yield(nil) thus { it =>
                         is?(it, :Pico.Frame)
                     }
                 }
@@ -166,8 +166,8 @@ spawn (task () {
                         set b2 = next(birds, b2)
                         break if b2==nil
                         val col? =
-                            detrack(b1) thus { as x1 :Bird =>
-                                detrack(b2) thus { as x2 :Bird =>
+                            detrack(b1) thus { x1 :Bird =>
+                                detrack(b2) thus { x2 :Bird =>
                                     (x1 /= x2)      &&
                                     (pub(x1).alive) &&
                                     (pub(x2).alive) &&
@@ -188,13 +188,13 @@ spawn (task () {
             loop {
                 val bird =
                     loop {
-                        break if yield(nil) thus { as evt :Pico.Mouse.Button.Dn =>
+                        break if yield(nil) thus { evt :Pico.Mouse.Button.Dn =>
                             if is?(evt, :Pico.Mouse.Button.Dn) {
                                 var b = nil
                                 loop {
                                     set b = next(birds, b)
                                     break(false) if b==nil
-                                    break(drop(b)) if detrack(b) thus { as x :Bird =>
+                                    break(drop(b)) if detrack(b) thus { x :Bird =>
                                         pico-point-vs-rect?(evt.pos, pub(x).rect)
                                     }
                                 }
@@ -205,9 +205,9 @@ spawn (task () {
                     }
 println(:bird, bird)
                 loop {
-                    break if nil == yield(nil) thus { as it =>
+                    break if nil == yield(nil) thus { it =>
                         if is?(it, :Pico.Draw) {
-                            detrack(bird) thus { as x :Bird =>
+                            detrack(bird) thus { x :Bird =>
                                 if x {
                                     pico-output-draw-line([0,-240], pub(x).rect.pos)
                                     true
@@ -228,7 +228,7 @@ println(:bird, bird)
     }) ()
     loop {
         loop { ;; AWAIT
-            break if yield(nil) thus { as it :Pico.Key.Dn =>
+            break if yield(nil) thus { it :Pico.Key.Dn =>
                 if is?(it, :Pico.Key.Dn) {
                     (it.key == :Key-P)
                 } else {
@@ -238,7 +238,7 @@ println(:bird, bird)
         }
         toggle game(false)
         loop {
-            break if yield(nil) thus { as it :Pico.Key.Dn =>
+            break if yield(nil) thus { it :Pico.Key.Dn =>
                 if is?(it, :Pico.Draw) {
                     pico-output-draw-image([0,0], "res/pause.png");
                     false

@@ -26,7 +26,7 @@ val Bird = task (t) {
     spawn (task () {
         loop {
             val v = loop { ;; AWAIT
-                break if yield(nil) thus { as it :Pico.Frame =>
+                break if yield(nil) thus { it :Pico.Frame =>
                     if is?(it, :Pico.Frame) {
                         it.ms * speed
                     } else {
@@ -42,7 +42,7 @@ val Bird = task (t) {
     spawn (task () {
         loop {
             loop { ;; AWAIT
-                break if yield(nil) thus { as it =>
+                break if yield(nil) thus { it =>
                     is?(it, :Pico.Draw)
                 }
             }
