@@ -1,26 +1,3 @@
-await ()
-await (trk)
-await (x>500)
-await (but :Pico.Mouse => but.x>20)
-await (:Pico.Mouse => it.x>20)
-await (it => it.x>20)   ;; error?
-
-watching :Pico.Mouse
-watching (but :Pico.Mouse => but.x>20)
-watching (:Pico.Mouse => it.x>20)
-
-every (but :Pico.Mouse => but.x>20) {
-    ...
-}
-
-catch (x :X => x>1) in
-
-detrack(b1) as { x:X => x }
-
-
-
-
-
 ^["@/pico/pico.ceu"]
 
 pico-state-set-title        <- "Birds - 11 (tracking)"
@@ -59,7 +36,7 @@ task Bird (t) :Bird {
             }
         }
         set pub().alive = false
-        watching task.pub.rect.pos.y < -((WIN.y/2) - 45) {
+        watching pub().rect.pos.y < -((WIN.y/2) - 45) {
             par {
                 every :Pico.Frame {
                     set pub().rect.pos.y = pub().rect.pos.y - (it.ms * 0.5)
