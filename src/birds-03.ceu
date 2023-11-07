@@ -9,13 +9,15 @@ pico-state-set-color-draw   <- [255,255,255,255]
 
 val WIN :XY = pico-state-get-size()
 
-task Bird (y,speed) {
+task Bird (t) :Rect {
+    val y = t[0]
+    val speed = t[1]
     var xx = (-WIN.x) / 2
     var yy = y
     var ang = 0
     par {
         every :Pico.Frame {
-            val v = evt.ms * speed
+            val v = it.ms * speed
             set xx = xx + (v/1000)
             set yy = y + ((speed/5) * math-sin(ang))
             set ang = ang + ((3.14*v)/100000)
@@ -29,15 +31,21 @@ task Bird (y,speed) {
     }
 }
 
-spawn {
+spawn task {
     val birds = tasks()
     loop i in {1 => 5{ {
-        spawn in birds, Bird(y,s) where {
+        (spawn Bird([y,s]) in birds) where {
             val y = -(WIN.y/2) + (100*i)
             val s = 100 + (10*i)
         }
     }
-    await false
+    await(false)
 }
 
-pico-loop ()
+loop {
+    val e = resume pico-coro ()
+    if e {
+        broadcast(e)
+    }
+    until (e is? :Pico.Quit)
+}

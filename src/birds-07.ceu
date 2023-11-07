@@ -11,45 +11,52 @@ random-seed()
 
 val WIN :XY = pico-state-get-size()
 
-task Bird (y,speed) :Rect {
-    set task.pub = [[(-WIN.x)/2,y], [100,90]]
+task Bird (t) :Rect {
+    val y = t[0]
+    val speed = t[1]
+    set pub() = [[(-WIN.x)/2,y], [100,90]]
     var ang = 0
-    awaiting (evt is? :collided) or (task.pub.pos.x > (WIN.x/2)) {
+    watching e1 => (e1 is? :collided) or (pub().pos.x > (WIN.x/2)) {
         par {
-            every :Pico.Frame {
-                val v = evt.ms * speed
-                set task.pub.pos.x = task.pub.pos.x + (v/1000)
-                set task.pub.pos.y = y + ((speed/5) * math-sin(ang))
+            every e2 :Pico.Frame {
+                val v = e2.ms * speed
+                set pub().pos.x = pub().pos.x + (v/1000)
+                set pub().pos.y = y + ((speed/5) * math-sin(ang))
                 set ang = ang + ((3.14*v)/100000)
             }
         } with {
             every :Pico.Draw {
                 if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0
-                    => pico-output-draw-image(task.pub.pos, "res/clumsy_up.png");
-                    => pico-output-draw-image(task.pub.pos, "res/clumsy_dn.png");
+                    => pico-output-draw-image(pub().pos, "res/clumsy_up.png");
+                    => pico-output-draw-image(pub().pos, "res/clumsy_dn.png");
             }
         }
     }
 }
 
-spawn {
+spawn task {
     val birds = tasks(5)
     par {
-        every 500:ms {
-            spawn in birds, Bird(y,s) where {
+        every :500:ms {
+            (spawn Bird([y,s]) in birds) where {
                 val y = -(WIN.y/2) + (random-next() % WIN.y)
                 val s = 100 + (random-next() % 100)
             }
         }
     } with {
         every :Pico.Frame {
-            loop b1 in :tasks birds {
-                loop b2 in :tasks birds {
-                    if status(detrack(b1)) and (detrack(b1) /= detrack(b2)) {
-                        if pico-rect-vs-rect?(detrack(b1).pub,detrack(b2).pub) {
-                            broadcast in detrack(b1), :collided
-                            broadcast in detrack(b2), :collided
+            loop b1 in birds {
+                loop b2 in birds {
+                    val col? =
+                        detrack(b1) as { x1 =>
+                            detrack(b2) as { x2 =>
+                                (x1 /= x2)      and
+                                pico-rect-vs-rect?(pub(x1), pub(x2))
                         }
+                    }
+                    if col? {
+                        broadcast(:collided) in b1
+                        broadcast(:collided) in b2
                     }
                 }
             }
@@ -57,4 +64,10 @@ spawn {
     }
 }
 
-pico-loop ()
+loop {
+    val e = resume pico-coro ()
+    if e {
+        broadcast(e)
+    }
+    until (e is? :Pico.Quit)
+}

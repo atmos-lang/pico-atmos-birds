@@ -39,5 +39,5 @@ loop {
     if e {
         broadcast(e)
     }
-    while e is-not? :Pico.Quit
+    until (e is? :Pico.Quit)
 }
