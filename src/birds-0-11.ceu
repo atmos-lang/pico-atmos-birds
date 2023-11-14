@@ -159,11 +159,11 @@ spawn (task () {
                 }
                 var b1 = nil
                 loop {
-                    set b1 = next(birds, b1)
+                    set b1 = next-tasks(birds, b1)
                     break if b1==nil
                     var b2 = nil
                     loop {
-                        set b2 = next(birds, b2)
+                        set b2 = next-tasks(birds, b2)
                         break if b2==nil
                         val col? =
                             detrack(b1) thus { x1 :Bird =>
@@ -192,7 +192,7 @@ spawn (task () {
                             if is?(evt, :Pico.Mouse.Button.Dn) {
                                 var b = nil
                                 loop {
-                                    set b = next(birds, b)
+                                    set b = next-tasks(birds, b)
                                     break(false) if b==nil
                                     break(drop(b)) if detrack(b) thus { x :Bird =>
                                         pico-point-vs-rect?(evt.pos, pub(x).rect)
@@ -265,4 +265,5 @@ loop {
             nil
         }
     }
+    `ceu_gc_collect();`
 }
