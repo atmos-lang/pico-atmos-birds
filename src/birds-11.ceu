@@ -93,21 +93,20 @@ spawn task {
                 }
             } with {
                 loop {
-                    val bird = loop {
-                        until
-                            every but :Pico.Mouse.Button.Dn {
+                    val bird =
+                        every but :Pico.Mouse.Button.Dn {
+                            until
                                 loop b in birds {
-                                    until detrack(b) as {
-                                        println(but.pos, pub(it))
-                                        pico-point-vs-rect?(but.pos, pub(it).(:Bird).rect)
+                                    until detrack(b) as { x :Bird =>
+                                        pico-point-vs-rect?(but.pos, pub(x).rect) and copy(b)
                                     }
                                 }
                             }
-                    }
+println(bird)
                     watching bird {
                         every :Pico.Draw {
-                            detrack(bird) as {
-                                pico-output-draw-line([0,-240], pub(it).(:Bird).rect.pos)
+                            detrack(bird) as { x :Bird =>
+                                pico-output-draw-line([0,-240], pub(x).rect.pos)
                             }
                         }
                     }
