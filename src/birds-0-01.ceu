@@ -61,14 +61,4 @@ val Bird = task (t) {
 spawn Bird ([150, 100])
 spawn Bird ([  0, 200])
 
-loop {
-    val e = resume pico-coro ()
-    break if do {
-        if e {
-            broadcast(e)
-            is?(e, :Pico.Quit)
-        } else {
-            nil
-        }
-    }
-}
+pico-loop()

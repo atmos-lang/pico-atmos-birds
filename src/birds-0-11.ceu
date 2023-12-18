@@ -32,7 +32,7 @@ val Delay = task (ms) {
     var tot = ms
     loop {
         break if yield(nil) thus { it =>
-            if is?(it,:frame) {
+            if is?(it,:Clock) {
                 set tot = tot - it[0]
                 tot <= 0
             } else {
@@ -255,15 +255,4 @@ println(:bird, bird)
     }
 }) ()
 
-loop {
-    val e = resume pico-coro ()
-    break if do {
-        if e {
-            broadcast(e)
-            is?(e, :Pico.Quit)
-        } else {
-            nil
-        }
-    }
-    `ceu_gc_collect();`
-}
+pico-loop()
