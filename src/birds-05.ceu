@@ -45,10 +45,4 @@ spawn task {
     }
 }
 
-loop {
-    val e = resume pico-coro ()
-    if e {
-        broadcast(e)
-    }
-    until (e is? :Pico.Quit)
-}
+pico-loop()

@@ -34,10 +34,4 @@ task Bird (t) :Rect {
 spawn Bird ([150, 100])
 spawn Bird ([  0, 200])
 
-loop {
-    val e = resume pico-coro ()
-    if e {
-        broadcast(e)
-    }
-    until (e is? :Pico.Quit)
-}
+pico-loop()
