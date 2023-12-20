@@ -50,7 +50,7 @@ spawn task {
                     val col? =
                         detrack(b1) as { x1 =>
                             detrack(b2) as { x2 =>
-                                (x1 /= x2)      and
+                                (x1 /= x2) and
                                 pico-rect-vs-rect?(pub(x1), pub(x2))
                         }
                     }
