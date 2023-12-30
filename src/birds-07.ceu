@@ -47,22 +47,26 @@ spawn task {
         every :Pico.Frame {
             loop b1 in birds {
                 loop b2 in birds {
-                    detrack(b1) { x1 =>
-                        val ok1 = detrack(b2) { x2 =>
-                            val ok2 = (x1 /= x2) and
-                                      pico-rect-vs-rect?(pub(x1), pub(x2))
-                            if ok2 {
-                                broadcast(:collided) in x2
-                            }
-                            ok2
+                    val col? =
+                        detrack(b1) { x1 =>
+                            detrack(b2) { x2 =>
+                                (x1 /= x2) and
+                                pico-rect-vs-rect?(pub(x1), pub(x2))
                         }
-                        if ok1 {
-                            broadcast(:collided) in x1
-                        }
+                    }
+                    if col? {
+                        detrack(b1) { x1 => broadcast(:collided) in x1 }
+                        detrack(b2) { x2 => broadcast(:collided) in x2 }
                     }
                 }
             }
         }
+    }
+}
+
+spawn task {
+    every :5:s {
+        `ceu_dump_gc();`
     }
 }
 
