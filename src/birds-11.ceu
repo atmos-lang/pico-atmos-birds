@@ -62,7 +62,7 @@ task Bird (t) :Bird {
 
 spawn task {
     par {
-        ;;toggle :pause => :resume {
+        toggle :Show {
             val birds = tasks(5)
             par {
                 every :500:ms {
@@ -102,7 +102,6 @@ spawn task {
                                     }
                                 }
                             }
-println(bird)
                     watching bird {
                         every :Pico.Draw {
                             detrack(bird) as { x :Bird =>
@@ -112,25 +111,21 @@ println(bird)
                     }
                 }
             }
-        ;;}
+        }
     } with {
         loop {
             await (:Pico.Key.Dn => it.key==:Key-P)
-            broadcast (:pause)
+            broadcast (:Show [false])
             watching (:Pico.Key.Dn => it.key==:Key-P) {
+println(:1)
                 every :Pico.Draw {
                     pico-output-draw-image([0,0], "res/pause.png");
                 }
             }
-            broadcast (:resume)
+println(:2)
+            broadcast (:Show [true])
         }
     }
 }
 
-loop {
-    val e = resume pico-coro ()
-    if e {
-        broadcast(e)
-    }
-    until e is? :Pico.Quit
-}
+pico-loop()
