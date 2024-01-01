@@ -115,15 +115,13 @@ spawn task {
     } with {
         loop {
             await (:Pico.Key.Dn => it.key==:Key-P)
-            broadcast (:Show [false])
+            broadcast (:Show [false]) in :global
             watching (:Pico.Key.Dn => it.key==:Key-P) {
-println(:1)
                 every :Pico.Draw {
                     pico-output-draw-image([0,0], "res/pause.png");
                 }
             }
-println(:2)
-            broadcast (:Show [true])
+            broadcast (:Show [true]) in :global
         }
     }
 }

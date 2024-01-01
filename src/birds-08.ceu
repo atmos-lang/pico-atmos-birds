@@ -71,10 +71,8 @@ spawn task {
                         }
                     }
                     if col? {
-    println(:b1, b1, detrack(b1), detrack(b1) { x=>status(x) })
-    println(:b2, b2, detrack(b2), detrack(b2) { x=>status(x) })
-                        broadcast(:collided) in b1
-                        broadcast(:collided) in b2
+                        detrack(b1) { x1 => broadcast(:collided) in x1 }
+                        detrack(b2) { x2 => broadcast(:collided) in x2 }
                     }
                 }
             }
