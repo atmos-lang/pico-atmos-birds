@@ -93,10 +93,8 @@ spawn task {
         }
     } with {
         loop {
-println(true)
             await (:Pico.Key.Dn => it.key==:Key-P)
             broadcast (:Show [false]) in :global
-println(false)
             watching (:Pico.Key.Dn => it.key==:Key-P) {
                 every :Pico.Draw {
                     pico-output-draw-image([0,0], "res/pause.png");
@@ -104,6 +102,12 @@ println(false)
             }
             broadcast (:Show [true]) in :global
         }
+    }
+}
+
+spawn task {
+    every :5:s {
+        `ceu_dump_gc();`
     }
 }
 

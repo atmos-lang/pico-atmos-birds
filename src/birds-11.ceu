@@ -19,7 +19,7 @@ task Bird (t) :Bird {
     set pub() = [true, [[(-WIN.x)/2,y], [100,90]]]
     var ang = 0
     watching (pub().rect.pos.x > (WIN.x/2)) {
-        watching evt => evt==:collided {
+        watching :collided {
             par {
                 every :Pico.Frame {
                     val v = it.ms * speed
@@ -76,8 +76,8 @@ spawn task {
                     loop b1 in birds {
                         loop b2 in birds {
                             val col? =
-                                detrack(b1) as { x1 :Bird =>
-                                    detrack(b2) as { x2 :Bird =>
+                                detrack(b1) { x1 :Bird =>
+                                    detrack(b2) { x2 :Bird =>
                                         (x1 /= x2)      and
                                         (pub(x1).alive) and
                                         (pub(x2).alive) and
@@ -85,8 +85,8 @@ spawn task {
                                 }
                             }
                             if col? {
-                                broadcast(:collided) in b1
-                                broadcast(:collided) in b2
+                                detrack(b1) { x1 => broadcast(:collided) in x1 }
+                                detrack(b2) { x2 => broadcast(:collided) in x2 }
                             }
                         }
                     }
@@ -97,14 +97,14 @@ spawn task {
                         every but :Pico.Mouse.Button.Dn {
                             until
                                 loop b in birds {
-                                    until detrack(b) as { x :Bird =>
+                                    until detrack(b) { x :Bird =>
                                         pico-point-vs-rect?(but.pos, pub(x).rect) and copy(b)
                                     }
                                 }
                             }
                     watching bird {
                         every :Pico.Draw {
-                            detrack(bird) as { x :Bird =>
+                            detrack(bird) { x :Bird =>
                                 pico-output-draw-line([0,-240], pub(x).rect.pos)
                             }
                         }
@@ -126,4 +126,10 @@ spawn task {
     }
 }
 
-pico-loop()
+spawn task {
+    every :5:s {
+        `ceu_dump_gc();`
+    }
+}
+
+pico-loop ()
