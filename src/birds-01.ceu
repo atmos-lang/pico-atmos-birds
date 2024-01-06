@@ -9,9 +9,7 @@ pico-state-set-color-draw   <- [255,255,255,255]
 
 val WIN :XY = pico-state-get-size()
 
-task Bird (t) :Rect {
-    val y = t[0]
-    val speed = t[1]
+task Bird (y, speed) :Rect {
     var xx = (-WIN.x) / 2
     var yy = y
     var ang = 0
@@ -31,7 +29,7 @@ task Bird (t) :Rect {
     }
 }
 
-spawn Bird ([150, 100])
-spawn Bird ([  0, 200])
+spawn Bird (150, 100)
+spawn Bird (  0, 200)
 
 pico-loop()
