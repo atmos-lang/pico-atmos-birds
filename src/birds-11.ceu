@@ -76,10 +76,12 @@ spawn task {
                             val col? =
                                 detrack(b1) { x1 :Bird =>
                                     detrack(b2) { x2 :Bird =>
+                                        val p1 = pub(x1)
+                                        val p2 = pub(x2)
                                         (x1 /= x2)      and
-                                        (pub(x1).alive) and
-                                        (pub(x2).alive) and
-                                        pico-rect-vs-rect?(pub(x1).rect, pub(x2).rect)
+                                        (p1.alive) and
+                                        (p2.alive) and
+                                        pico-rect-vs-rect?(p1.rect, p2.rect)
                                 }
                             }
                             if col? {

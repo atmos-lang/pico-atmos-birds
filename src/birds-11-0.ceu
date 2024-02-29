@@ -31,10 +31,10 @@ val WIN :XY = pico-state-get-size()
 val Delay = task (ms) {
     var tot = ms
     loop {
-        yield(nil)
+        val e = yield(nil)
         break if do {
-            if is?(evt,:Clock) {
-                set tot = tot - evt[0]
+            if is?(e,:Clock) {
+                set tot = tot - e[0]
                 tot <= 0
             } else {
                 false
@@ -53,16 +53,16 @@ val Bird = task (t) :Bird {
     val Y =
         spawn (task () :void {
             loop {
-                yield(nil)
-                break if (func (it :Pico.Frame) {
-                    if is?(it, :Pico.Frame) {
-                        val v = it.ms * speed
+                val e :Pico.Frame = yield(nil)
+                break if do {
+                    if is?(e, :Pico.Frame) {
+                        val v = e.ms * speed
                         set pub().rect.pos.x = pub().rect.pos.x + (v/1000)
                         set pub().rect.pos.y = y + ((speed/5) * math-sin(ang))
                         set ang = ang + ((3.14*v)/100000)
                         false
                     } else {
-                        if is?(it, :Pico.Draw) {
+                        if is?(e, :Pico.Draw) {
                             if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0 {
                                 pico-output-draw-image(pub().rect.pos, "res/clumsy_up.png");
                             } else {
@@ -70,29 +70,29 @@ val Bird = task (t) :Bird {
                             }
                             false
                         } else {
-                            (it == :collided)
+                            (e == :collided)
                         }
                     }
-                }) (evt)
+                }
             }
 
             set pub().alive = false
 
             loop {
-                yield(nil)
-                break if (func (it :Pico.Frame) {
-                    if is?(it, :Pico.Frame) {
-                        set pub().rect.pos.y = pub().rect.pos.y - (it.ms * 0.5)
+                val e :Pico.Frame = yield(nil)
+                break if do {
+                    if is?(e, :Pico.Frame) {
+                        set pub().rect.pos.y = pub().rect.pos.y - (e.ms * 0.5)
                         (pub().rect.pos.y < -((WIN.y/2) - 45))
                     } else {
-                        if is?(it, :Pico.Draw) {
+                        if is?(e, :Pico.Draw) {
                             pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png");
                             false
                         } else {
                             false
                         }
                     }
-                }) (evt)
+                }
             }
 
             spawn (task () :void {
@@ -155,7 +155,7 @@ spawn (task () {
                 val y = -(WIN.y/2) + (random-next() % WIN.y)
                 val s = 100 + (random-next() % 100)
 println(:spawn)
-                spawn Bird([y,s]) in birds
+                ;;spawn Bird([y,s]) in birds
             }
         }) ()
         spawn (task () {
@@ -164,26 +164,23 @@ println(:spawn)
                     yield(nil)
                     break if is?(evt, :Pico.Frame)
                 }
-                var b1 = nil
+                var b1 :Bird = nil
                 loop {
                     set b1 = next-tasks(birds, b1)
                     break if b1==nil
-                    var b2 = nil
+                    var b2 :Bird = nil
                     loop {
                         set b2 = next-tasks(birds, b2)
                         break if b2==nil
-                        val col? =
-                            detrack(b1) { x1 :Bird =>
-                                detrack(b2) { x2 :Bird =>
-                                    (x1 /= x2)      &&
-                                    (pub(x1).alive) &&
-                                    (pub(x2).alive) &&
-                                    pico-rect-vs-rect?(pub(x1).rect, pub(x2).rect)
-                                }
-                            }
+                        val col? = do {
+                            (b1 /= b2)      &&
+                            (pub(b1).alive) &&
+                            (pub(b2).alive) &&
+                            pico-rect-vs-rect?(pub(b1).rect, pub(b2).rect)
+                        }
                         if col? {
-                            detrack(b1) { x1 => broadcast(:collided) in x1 }
-                            detrack(b2) { x2 => broadcast(:collided) in x2 }
+                            broadcast(:collided) in b1
+                            broadcast(:collided) in b2
                         } else {
                             nil
                         }
@@ -195,37 +192,33 @@ println(:spawn)
             loop {
                 val bird =
                     loop {
-                        yield(nil)
-                        break if (func (it :Pico.Mouse.Button.Dn) {
-                            if is?(it, :Pico.Mouse.Button.Dn) {
-                                var b = nil
+                        val e :Pico.Mouse.Button = yield(nil)
+                        break if do {
+                            if is?(e, :Pico.Mouse.Button.Dn) {
+                                var b :Bird = nil
                                 loop {
                                     set b = next-tasks(birds, b)
                                     break(false) if b==nil
-                                    break(drop(b)) if detrack(b) { x :Bird =>
-                                        pico-point-vs-rect?(it.pos, pub(x).rect)
-                                    }
+                                    break(b) if pico-point-vs-rect?(e.pos, pub(b).rect)
                                 }
                             } else {
                                 nil
                             }
-                        }) (evt)
+                        }
                     }
 println(:bird, bird)
                 loop {
-                    yield(nil)
-                    break if nil == do {
-                        if is?(evt, :Pico.Draw) {
-                            detrack(bird) { x :Bird =>
-                                if x {
-                                    pico-output-draw-line([0,-240], pub(x).rect.pos)
-                                    true
-                                } else {
-                                    nil
-                                }
-                            }
-                        } else {
+                    val e = yield(nil)
+                    break if do {
+                        if status(bird) == :terminated {
                             true
+                        } else {
+                            if is?(e, :Pico.Draw) {
+                                pico-output-draw-line([0,-240], pub(bird).rect.pos)
+                            } else {
+                                nil
+                            }
+                            false
                         }
                     }
                 }
@@ -237,14 +230,14 @@ println(:bird, bird)
     }) ()
     loop {
         loop { ;; AWAIT
-            yield(nil)
-            break if (func (it :Pico.Key.Dn) {
+            val e :Pico.Key = yield(nil)
+            break if do {
                 if is?(it, :Pico.Key.Dn) {
                     (it.key == :Key-P)
                 } else {
                     false
                 }
-            }) (evt)
+            }
         }
         toggle game(false)
         loop {
