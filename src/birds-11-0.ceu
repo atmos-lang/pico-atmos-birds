@@ -51,7 +51,7 @@ val Bird = task (t) :Bird {
     set pub() = [true, [[(-WIN.x)/2,y], [100,90]]]
     var ang = 0
     val Y =
-        spawn (task () :void {
+        spawn (task :nested () {
             loop {
                 val e :Pico.Frame = yield(nil)
                 break if do {
@@ -95,19 +95,19 @@ val Bird = task (t) :Bird {
                 }
             }
 
-            spawn (task () :void {
+            spawn (task :nested () {
                 loop {
                     do {
                         val awt = spawn Delay(100)
                         loop {
-                            yield(nil)
-                            break if evt==awt
+                            val e = yield(nil)
+                            break if e==awt
                         }
                     }
-                    spawn (task () :void {
+                    spawn (task :nested () {
                         loop {
-                            yield(nil)
-                            if is?(evt, :Pico.Draw) {
+                            val e = yield(nil)
+                            if is?(e, :Pico.Draw) {
                                 pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png")
                             } else {
                                 nil
@@ -117,8 +117,8 @@ val Bird = task (t) :Bird {
                     do {
                         val awt = spawn Delay(100)
                         loop {
-                            yield(nil)
-                            break if evt==awt
+                            val e = yield(nil)
+                            break if e==awt
                         }
                     }
                 }
@@ -127,16 +127,16 @@ val Bird = task (t) :Bird {
             do {
                 val awt = spawn Delay(1000)
                 loop {
-                    yield(nil)
-                    break if evt==awt
+                    val e = yield(nil)
+                    break if e==awt
                 }
             }
         }) ()
 
     loop {
         break if (pub().rect.pos.x > (WIN.x/2))
-        yield(nil)
-        break if evt==Y
+        val e = yield(nil)
+        break if e==Y
     }
 }
 
@@ -148,21 +148,21 @@ spawn (task () {
                 do {
                     val awt = spawn Delay(500)
                     loop {
-                        yield(nil)
-                        break if evt==awt
+                        val e = yield(nil)
+                        break if e==awt
                     }
+                    `ceu_dump_gc();`
                 }
                 val y = -(WIN.y/2) + (random-next() % WIN.y)
                 val s = 100 + (random-next() % 100)
-println(:spawn)
-                ;;spawn Bird([y,s]) in birds
+                spawn Bird([y,s]) in birds
             }
         }) ()
         spawn (task () {
             loop {
                 loop { ;; AWAIT
-                    yield(nil)
-                    break if is?(evt, :Pico.Frame)
+                    val e = yield(nil)
+                    break if is?(e, :Pico.Frame)
                 }
                 var b1 :Bird = nil
                 loop {
@@ -190,7 +190,7 @@ println(:spawn)
         }) ()
         spawn (task () {
             loop {
-                val bird =
+                val bird :Bird =
                     loop {
                         val e :Pico.Mouse.Button = yield(nil)
                         break if do {
@@ -232,8 +232,8 @@ println(:bird, bird)
         loop { ;; AWAIT
             val e :Pico.Key = yield(nil)
             break if do {
-                if is?(it, :Pico.Key.Dn) {
-                    (it.key == :Key-P)
+                if is?(e, :Pico.Key.Dn) {
+                    (e.key == :Key-P)
                 } else {
                     false
                 }
@@ -241,19 +241,19 @@ println(:bird, bird)
         }
         toggle game(false)
         loop {
-            yield(nil)
-            break if (func (it :Pico.Key.Dn) {
-                if is?(it, :Pico.Draw) {
+            val e :Pico.Key.Dn = yield(nil)
+            break if do {
+                if is?(e, :Pico.Draw) {
                     pico-output-draw-image([0,0], "res/pause.png");
                     false
                 } else {
-                    if is?(it, :Pico.Key.Dn) {
-                        (it.key == :Key-P)
+                    if is?(e, :Pico.Key.Dn) {
+                        (e.key == :Key-P)
                     } else {
                         nil
                     }
                 }
-            }) (evt)
+            }
         }
         toggle game(true)
     }
