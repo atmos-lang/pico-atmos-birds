@@ -11,9 +11,7 @@ random-seed()
 
 val WIN :XY = pico-state-get-size()
 
-task Bird (t) :Rect {
-    val y = t[0]
-    val speed = t[1]
+task Bird (y, speed) :Rect {
     set pub() = [[(-WIN.x)/2,y], [100,90]]
     var ang = 0
     watching e1 => (e1 is? :collided) or (pub().pos.x > (WIN.x/2)) {
@@ -38,7 +36,7 @@ spawn task {
     val birds = tasks(5)
     par {
         every :500:ms {
-            (spawn Bird([y,s]) in birds) where {
+            (spawn Bird(y,s) in birds) where {
                 val y = -(WIN.y/2) + (random-next() % WIN.y)
                 val s = 100 + (random-next() % 100)
             }
@@ -47,16 +45,10 @@ spawn task {
         every :Pico.Frame {
             loop b1 in birds {
                 loop b2 in birds {
-                    val col? =
-                        detrack(b1) { x1 =>
-                            detrack(b2) { x2 =>
-                                (x1 /= x2) and
-                                pico-rect-vs-rect?(pub(x1), pub(x2))
-                        }
-                    }
+                    val col? = (b1/=b2) and pico-rect-vs-rect?(pub(b1),pub(b2))
                     if col? {
-                        detrack(b1) { x1 => broadcast(:collided) in x1 }
-                        detrack(b2) { x2 => broadcast(:collided) in x2 }
+                        broadcast(:collided) in b1
+                        broadcast(:collided) in b2
                     }
                 }
             }

@@ -11,9 +11,7 @@ random-seed()
 
 val WIN :XY = pico-state-get-size()
 
-task Bird (t) :Rect {
-    val y = t[0]
-    val speed = t[1]
+task Bird (y, speed) :Rect {
     var xx = (-WIN.x) / 2
     var yy = y
     var ang = 0
@@ -38,7 +36,7 @@ task Bird (t) :Rect {
 spawn task {
     val birds = tasks(5)
     every :500:ms {
-        (spawn Bird([y,s]) in birds) where {
+        (spawn Bird(y,s) in birds) where {
             val y = -(WIN.y/2) + (random-next() % WIN.y)
             val s = 100 + (random-next() % 100)
         }
