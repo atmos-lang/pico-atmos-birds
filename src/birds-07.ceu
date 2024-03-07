@@ -44,12 +44,16 @@ spawn task {
     } with {
         every :Pico.Frame {
             loop b1 in birds {
+                val pub1 = pub(b1)
                 loop b2 in birds {
-                    val col? = (b1/=b2) and pico-rect-vs-rect?(pub(b1),pub(b2))
+;;println(status(b1), pub(b1), status(b2), pub(b2))
+                    val pub2 = pub(b2)
+                    val col? = (b1/=b2) and pico-rect-vs-rect?(pub1,pub2)
                     if col? {
                         broadcast(:collided) in b1
                         broadcast(:collided) in b2
                     }
+                    break if col?
                 }
             }
         }

@@ -70,12 +70,15 @@ spawn task {
     } with {
         every :Pico.Frame {
             loop b1 :Bird in birds {
+                val r1 = pub(b1).rect
                 loop b2 :Bird in birds {
-                    val col? = (b1/=b2) and pico-rect-vs-rect?(pub(b1).rect,pub(b2).rect)
+                    val r2 = pub(b2).rect
+                    val col? = (b1/=b2) and pico-rect-vs-rect?(r1,r2)
                     if col? {
                         broadcast(:collided) in b1
                         broadcast(:collided) in b2
                     }
+                    break if col?
                 }
             }
         }

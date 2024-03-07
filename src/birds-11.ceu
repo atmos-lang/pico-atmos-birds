@@ -85,6 +85,7 @@ spawn task {
                                 broadcast(:collided) in b1
                                 broadcast(:collided) in b2
                             }
+                            break if col?
                         }
                     }
                 }
