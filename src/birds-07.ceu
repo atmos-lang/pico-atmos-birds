@@ -12,21 +12,21 @@ random-seed()
 val WIN :XY = pico-state-get-size()
 
 task Bird (y, speed) :Rect {
-    set pub() = [[(-WIN.x)/2,y], [100,90]]
+    set pub = [[(-WIN.x)/2,y], [100,90]]
     var ang = 0
-    watching e1 => (e1 is? :collided) or (pub().pos.x > (WIN.x/2)) {
+    watching e1 => (e1 is? :collided) or (pub.pos.x > (WIN.x/2)) {
         par {
             every e2 :Pico.Frame {
                 val v = e2.ms * speed
-                set pub().pos.x = pub().pos.x + (v/1000)
-                set pub().pos.y = y + ((speed/5) * math-sin(ang))
+                set pub.pos.x = pub.pos.x + (v/1000)
+                set pub.pos.y = y + ((speed/5) * math-sin(ang))
                 set ang = ang + ((3.14*v)/100000)
             }
         } with {
             every :Pico.Draw {
                 if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0
-                    => pico-output-draw-image(pub().pos, "res/clumsy_up.png");
-                    => pico-output-draw-image(pub().pos, "res/clumsy_dn.png");
+                    => pico-output-draw-image(pub.pos, "res/clumsy_up.png");
+                    => pico-output-draw-image(pub.pos, "res/clumsy_dn.png");
             }
         }
     }
@@ -44,10 +44,10 @@ spawn task {
     } with {
         every :Pico.Frame {
             loop b1 in birds {
-                val pub1 = pub(b1)
+                val pub1 = b1.pub
                 loop b2 in birds {
 ;;println(status(b1), pub(b1), status(b2), pub(b2))
-                    val pub2 = pub(b2)
+                    val pub2 = b2.pub
                     val col? = (b1/=b2) and pico-rect-vs-rect?(pub1,pub2)
                     if col? {
                         broadcast(:collided) in b1

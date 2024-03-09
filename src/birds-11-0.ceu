@@ -48,7 +48,7 @@ data :Bird = [alive,rect:Rect]
 val Bird = task (t) :Bird {
     val y = t[0]
     val speed = t[1]
-    set pub() = [true, [[(-WIN.x)/2,y], [100,90]]]
+    set pub = [true, [[(-WIN.x)/2,y], [100,90]]]
     var ang = 0
     val Y =
         spawn (task :nested () {
@@ -57,16 +57,16 @@ val Bird = task (t) :Bird {
                 break if do {
                     if is?(e, :Pico.Frame) {
                         val v = e.ms * speed
-                        set pub().rect.pos.x = pub().rect.pos.x + (v/1000)
-                        set pub().rect.pos.y = y + ((speed/5) * math-sin(ang))
+                        set pub.rect.pos.x = pub.rect.pos.x + (v/1000)
+                        set pub.rect.pos.y = y + ((speed/5) * math-sin(ang))
                         set ang = ang + ((3.14*v)/100000)
                         false
                     } else {
                         if is?(e, :Pico.Draw) {
                             if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0 {
-                                pico-output-draw-image(pub().rect.pos, "res/clumsy_up.png");
+                                pico-output-draw-image(pub.rect.pos, "res/clumsy_up.png");
                             } else {
-                                pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png");
+                                pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png");
                             }
                             false
                         } else {
@@ -76,17 +76,17 @@ val Bird = task (t) :Bird {
                 }
             }
 
-            set pub().alive = false
+            set pub.alive = false
 
             loop {
                 val e :Pico.Frame = yield(nil)
                 break if do {
                     if is?(e, :Pico.Frame) {
-                        set pub().rect.pos.y = pub().rect.pos.y - (e.ms * 0.5)
-                        (pub().rect.pos.y < -((WIN.y/2) - 45))
+                        set pub.rect.pos.y = pub.rect.pos.y - (e.ms * 0.5)
+                        (pub.rect.pos.y < -((WIN.y/2) - 45))
                     } else {
                         if is?(e, :Pico.Draw) {
-                            pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png");
+                            pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png");
                             false
                         } else {
                             false
@@ -108,7 +108,7 @@ val Bird = task (t) :Bird {
                         loop {
                             val e = yield(nil)
                             if is?(e, :Pico.Draw) {
-                                pico-output-draw-image(pub().rect.pos, "res/clumsy_dn.png")
+                                pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png")
                             } else {
                                 nil
                             }
@@ -134,7 +134,7 @@ val Bird = task (t) :Bird {
         }) ()
 
     loop {
-        break if (pub().rect.pos.x > (WIN.x/2))
+        break if (pub.rect.pos.x > (WIN.x/2))
         val e = yield(nil)
         break if e==Y
     }
@@ -174,9 +174,9 @@ spawn (task () {
                         break if b2==nil
                         val col? = do {
                             (b1 /= b2)      &&
-                            (pub(b1).alive) &&
-                            (pub(b2).alive) &&
-                            pico-rect-vs-rect?(pub(b1).rect, pub(b2).rect)
+                            (b1.pub.alive) &&
+                            (b2.pub.alive) &&
+                            pico-rect-vs-rect?(b1.pub.rect, b2.pub.rect)
                         }
                         if col? {
                             broadcast(:collided) in b1
@@ -199,7 +199,7 @@ spawn (task () {
                                 loop {
                                     set b = next-tasks(birds, b)
                                     break(false) if b==nil
-                                    break(b) if pico-point-vs-rect?(e.pos, pub(b).rect)
+                                    break(b) if pico-point-vs-rect?(e.pos, b.pub.rect)
                                 }
                             } else {
                                 nil
@@ -214,7 +214,7 @@ println(:bird, bird)
                             true
                         } else {
                             if is?(e, :Pico.Draw) {
-                                pico-output-draw-line([0,-240], pub(bird).rect.pos)
+                                pico-output-draw-line([0,-240], bird.pub.rect.pos)
                             } else {
                                 nil
                             }
