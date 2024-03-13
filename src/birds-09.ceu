@@ -16,7 +16,7 @@ data :Bird = [alive,rect:Rect]
 task Bird (y, speed) :Bird {
     set pub = [true, [[(-WIN.x)/2,y], [100,90]]]
     var ang = 0
-    watching (pub.rect.pos.x > (WIN.x/2)) {
+    watching ,(pub.rect.pos.x > (WIN.x/2)) {
         watching :collided {
             par {
                 every :Pico.Frame {
@@ -34,7 +34,7 @@ task Bird (y, speed) :Bird {
             }
         }
         set pub.alive = false
-        watching pub.rect.pos.y < -((WIN.y/2) - 45) {
+        watching ,(pub.rect.pos.y < -((WIN.y/2) - 45)) {
             par {
                 every :Pico.Frame {
                     set pub.rect.pos.y = pub.rect.pos.y - (it.ms * 0.5)
@@ -56,9 +56,10 @@ task Bird (y, speed) :Bird {
             }
         }
     }
+    pub
 }
 
-spawn task {
+spawn {
     val birds = tasks(5)
     par {
         every :500:ms {

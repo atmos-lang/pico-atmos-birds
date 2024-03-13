@@ -16,7 +16,7 @@ data :Bird = [alive,rect:Rect]
 task Bird (y, speed) :Bird {
     set pub = [true, [[(-WIN.x)/2,y], [100,90]]]
     var ang = 0
-    watching (pub.rect.pos.x > (WIN.x/2)) {
+    watching ,(pub.rect.pos.x > (WIN.x/2)) {
         watching :collided {
             par {
                 every :Pico.Frame {
@@ -34,7 +34,7 @@ task Bird (y, speed) :Bird {
             }
         }
         set pub.alive = false
-        watching pub.rect.pos.y < -((WIN.y/2) - 45) {
+        watching ,(pub.rect.pos.y < -((WIN.y/2) - 45)) {
             par {
                 every :Pico.Frame {
                     set pub.rect.pos.y = pub.rect.pos.y - (it.ms * 0.5)
@@ -56,9 +56,10 @@ task Bird (y, speed) :Bird {
             }
         }
     }
+    pub
 }
 
-spawn task {
+spawn {
     par {
         toggle :Show {
             val birds = tasks(5)
@@ -98,7 +99,7 @@ spawn task {
                                     until b.pub.alive and pico-point-vs-rect?(but.pos,b.pub.rect) and b
                                 }
                             }
-                    watching bird {
+                    watching ==bird {
                         every :Pico.Draw {
                             pico-output-draw-line([0,-240], bird.pub.rect.pos)
                         }
@@ -108,9 +109,9 @@ spawn task {
         }
     } with {
         loop {
-            await (:Pico.Key.Dn => it.key==:Key-P)
+            await (:Pico.Key.Dn, it.key==:Key-P)
             broadcast (:Show [false]) in :global
-            watching (:Pico.Key.Dn => it.key==:Key-P) {
+            watching (:Pico.Key.Dn, it.key==:Key-P) {
                 every :Pico.Draw {
                     pico-output-draw-image([0,0], "res/pause.png");
                 }
@@ -120,7 +121,7 @@ spawn task {
     }
 }
 
-spawn task {
+spawn {
     every :5:s {
         `ceu_dump_gc();`
     }

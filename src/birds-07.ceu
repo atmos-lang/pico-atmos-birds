@@ -14,7 +14,7 @@ val WIN :XY = pico-state-get-size()
 task Bird (y, speed) :Rect {
     set pub = [[(-WIN.x)/2,y], [100,90]]
     var ang = 0
-    watching e1 => (e1 is? :collided) or (pub.pos.x > (WIN.x/2)) {
+    watching e1, (e1 is? :collided) or (pub.pos.x > (WIN.x/2)) {
         par {
             every e2 :Pico.Frame {
                 val v = e2.ms * speed
@@ -30,9 +30,10 @@ task Bird (y, speed) :Rect {
             }
         }
     }
+    pub
 }
 
-spawn task {
+spawn {
     val birds = tasks(5)
     par {
         every :500:ms {
@@ -60,7 +61,7 @@ spawn task {
     }
 }
 
-spawn task {
+spawn {
     every :5:s {
         `ceu_dump_gc();`
     }

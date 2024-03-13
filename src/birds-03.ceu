@@ -29,7 +29,7 @@ task Bird (y, speed) :Rect {
     }
 }
 
-spawn task {
+spawn {
     val birds = tasks()
     loop i in {1 => 5{ {
         (spawn Bird(y,s) in birds) where {
@@ -37,7 +37,7 @@ spawn task {
             val s = 100 + (10*i)
         }
     }
-    await(false)
+    await(,false)
 }
 
 pico-loop()

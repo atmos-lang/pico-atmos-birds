@@ -31,7 +31,7 @@ task Bird (y, speed) :Rect {
     }
 }
 
-spawn task {
+spawn {
     val birds = tasks(5)
     every :500:ms {
         (spawn Bird(y,s) in birds) where {

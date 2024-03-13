@@ -29,7 +29,7 @@ task Bird (y, speed) :Rect {
     }
 }
 
-spawn task {
+spawn {
     loop {
         spawn Bird (150, 100)
         spawn Bird (  0, 200)
