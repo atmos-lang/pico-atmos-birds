@@ -61,10 +61,12 @@ spawn {
     }
 }
 
+;;;
 spawn {
     every :5:s {
         `ceu_dump_gc();`
     }
 }
+;;;
 
 pico-loop()
