@@ -7,7 +7,7 @@ pico-state-set-grid         <- false
 pico-state-set-color-clear  <- [0,0,0,255]
 pico-state-set-color-draw   <- [255,255,255,255]
 
-random-seed()
+random.seed()
 
 val WIN :XY = pico-state-get-size()
 
@@ -22,12 +22,12 @@ task Bird (y, speed) :Bird {
                 every :Pico.Frame {
                     val v = it.ms * speed
                     set pub.rect.pos.x = pub.rect.pos.x + (v/1000)
-                    set pub.rect.pos.y = y + ((speed/5) * math-sin(ang))
+                    set pub.rect.pos.y = y + ((speed/5) * math.sin(ang))
                     set ang = ang + ((3.14*v)/100000)
                 }
             } with {
                 every :Pico.Draw {
-                    if (math-floor(((ang+(3.14/2))/3.14)) % 2) == 0
+                    if (math.floor(((ang+(3.14/2))/3.14)) % 2) == 0
                         => pico-output-draw-image(pub.rect.pos, "res/clumsy_up.png");
                         => pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png");
                 }
@@ -64,8 +64,8 @@ spawn {
     par {
         every :500:ms {
             (spawn Bird(y,s) in birds) where {
-                val y = -(WIN.y/2) + (random-next() % WIN.y)
-                val s = 100 + (random-next() % 100)
+                val y = -(WIN.y/2) + (random.next() % WIN.y)
+                val s = 100 + (random.next() % 100)
             }
         }
     } with {
