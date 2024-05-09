@@ -1,15 +1,15 @@
 ^["@/pico/pico.ceu"]
 
-pico-state-set-title        <- "Birds - 11 (tracking)"
-pico-state-set-size         <- [640,480]
-pico-state-set-size-pixel   <- [1,1]
-pico-state-set-grid         <- false
-pico-state-set-color-clear  <- [0,0,0,255]
-pico-state-set-color-draw   <- [255,255,255,255]
+pico.state.set.title        <- "Birds - 11 (tracking)"
+pico.state.set.size.window  <- [640,480]
+pico.state.set.size.pixel   <- [1,1]
+pico.state.set.grid         <- false
+pico.state.set.color.clear  <- [0,0,0,255]
+pico.state.set.color.draw   <- [255,255,255,255]
 
 random.seed()
 
-val WIN :XY = pico-state-get-size()
+val WIN :XY = pico.state.get.size.window()
 
 data :Bird = [alive,rect:Rect]
 
@@ -28,8 +28,8 @@ task Bird (y, speed) :Bird {
             } with {
                 every :Pico.Draw {
                     if (math.floor(((ang+(3.14/2))/3.14)) % 2) == 0
-                        => pico-output-draw-image(pub.rect.pos, "res/clumsy_up.png");
-                        => pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png");
+                        => pico.output.draw.image(pub.rect.pos, "res/clumsy_up.png");
+                        => pico.output.draw.image(pub.rect.pos, "res/clumsy_dn.png");
                 }
             }
         }
@@ -41,7 +41,7 @@ task Bird (y, speed) :Bird {
                 }
             } with {
                 every :Pico.Draw {
-                    pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png");
+                    pico.output.draw.image(pub.rect.pos, "res/clumsy_dn.png");
                 }
             }
         }
@@ -50,7 +50,7 @@ task Bird (y, speed) :Bird {
                 await (:100:ms)
                 watching :100:ms {
                     every :Pico.Draw {
-                        pico-output-draw-image(pub.rect.pos, "res/clumsy_dn.png");
+                        pico.output.draw.image(pub.rect.pos, "res/clumsy_dn.png");
                     }
                 }
             }
@@ -80,7 +80,7 @@ spawn {
                                 (b1 /= b2) and
                                 (p1.alive) and
                                 (p2.alive) and
-                                pico-rect-vs-rect?(p1.rect, p2.rect)
+                                pico.rect-vs-rect?(p1.rect, p2.rect)
                             }
                             if col? {
                                 broadcast(:collided) in b1
@@ -96,12 +96,12 @@ spawn {
                         every but :Pico.Mouse.Button.Dn {
                             until
                                 loop b :Bird in birds {
-                                    until b.pub.alive and pico-point-vs-rect?(but.pos,b.pub.rect) and b
+                                    until b.pub.alive and pico.point-vs-rect?(but.pos,b.pub.rect) and b
                                 }
                             }
                     watching ==bird {
                         every :Pico.Draw {
-                            pico-output-draw-line([0,-240], bird.pub.rect.pos)
+                            pico.output.draw.line([0,-240], bird.pub.rect.pos)
                         }
                     }
                 }
@@ -113,7 +113,7 @@ spawn {
             broadcast (:Show [false]) in :global
             watching (:Pico.Key.Dn, it.key==:Key-P) {
                 every :Pico.Draw {
-                    pico-output-draw-image([0,0], "res/pause.png");
+                    pico.output.draw.image([0,0], "res/pause.png");
                 }
             }
             broadcast (:Show [true]) in :global
@@ -129,4 +129,4 @@ spawn {
 }
 ;;;
 
-pico-loop ()
+pico.loop ()

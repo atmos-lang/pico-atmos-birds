@@ -1,15 +1,15 @@
 ^["@/pico/pico.ceu"]
 
-pico-state-set-title        <- "Birds - 07 (iterator)"
-pico-state-set-size         <- [640,480]
-pico-state-set-size-pixel   <- [1,1]
-pico-state-set-grid         <- false
-pico-state-set-color-clear  <- [0,0,0,255]
-pico-state-set-color-draw   <- [255,255,255,255]
+pico.state.set.title        <- "Birds - 07 (iterator)"
+pico.state.set.size.window  <- [640,480]
+pico.state.set.size.pixel   <- [1,1]
+pico.state.set.grid         <- false
+pico.state.set.color.clear  <- [0,0,0,255]
+pico.state.set.color.draw   <- [255,255,255,255]
 
 random.seed()
 
-val WIN :XY = pico-state-get-size()
+val WIN :XY = pico.state.get.size.window()
 
 task Bird (y, speed) :Rect {
     set pub = [[(-WIN.x)/2,y], [100,90]]
@@ -25,8 +25,8 @@ task Bird (y, speed) :Rect {
         } with {
             every :Pico.Draw {
                 if (math.floor(((ang+(3.14/2))/3.14)) % 2) == 0
-                    => pico-output-draw-image(pub.pos, "res/clumsy_up.png");
-                    => pico-output-draw-image(pub.pos, "res/clumsy_dn.png");
+                    => pico.output.draw.image(pub.pos, "res/clumsy_up.png");
+                    => pico.output.draw.image(pub.pos, "res/clumsy_dn.png");
             }
         }
     }
@@ -49,7 +49,7 @@ spawn {
                 loop b2 in birds {
 ;;println(status(b1), pub(b1), status(b2), pub(b2))
                     val pub2 = b2.pub
-                    val col? = (b1/=b2) and pico-rect-vs-rect?(pub1,pub2)
+                    val col? = (b1/=b2) and pico.rect-vs-rect?(pub1,pub2)
                     if col? {
                         broadcast(:collided) in b1
                         broadcast(:collided) in b2
@@ -69,4 +69,4 @@ spawn {
 }
 ;;;
 
-pico-loop()
+pico.loop()
