@@ -16,7 +16,7 @@ data :Bird = [alive,rect:Rect]
 task Bird (y, speed) :Bird {
     set pub = [true, [[(-WIN.x)/2,y], [100,90]]]
     var ang = 0
-    watching ,(pub.rect.pos.x > (WIN.x/2)) {
+    watching |(pub.rect.pos.x > (WIN.x/2)) {
         watching :collided {
             par {
                 every :Pico.Frame {
@@ -34,7 +34,7 @@ task Bird (y, speed) :Bird {
             }
         }
         set pub.alive = false
-        watching ,(pub.rect.pos.y < -((WIN.y/2) - 45)) {
+        watching |(pub.rect.pos.y < -((WIN.y/2) - 45)) {
             par {
                 every :Pico.Frame {
                     set pub.rect.pos.y = pub.rect.pos.y - (it.ms * 0.5)
@@ -45,10 +45,10 @@ task Bird (y, speed) :Bird {
                 }
             }
         }
-        watching :1:s {
+        watching <1:s> {
             loop {
-                await(:100:ms)
-                watching :100:ms {
+                await <100:ms>
+                watching <100:ms> {
                     every :Pico.Draw {
                         pico.output.draw.image(pub.rect.pos, "res/clumsy_dn.png");
                     }
@@ -64,7 +64,7 @@ spawn {
         toggle :Show {
             val birds = tasks(5)
             par {
-                every :500:ms {
+                every <500:ms> {
                     (spawn Bird(y,s) in birds) where {
                         val y = -(WIN.y/2) + (random.next() % WIN.y)
                         val s = 100 + (random.next() % 100)
@@ -81,7 +81,7 @@ spawn {
                                 broadcast(:collided) in b1
                                 broadcast(:collided) in b2
                             }
-                            break if col?
+                            until col?
                         }
                     }
                 }
@@ -89,9 +89,9 @@ spawn {
         }
     } with {
         loop {
-            await (:Pico.Key.Dn, it.key==:Key-P)
+            await (:Pico.Key.Dn | it.key==:Key-P)
             broadcast (:Show [false]) in :global
-            watching (:Pico.Key.Dn, it.key==:Key-P) {
+            watching (:Pico.Key.Dn | it.key==:Key-P) {
                 every :Pico.Draw {
                     pico.output.draw.image([0,0], "res/pause.png");
                 }

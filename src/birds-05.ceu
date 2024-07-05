@@ -15,7 +15,7 @@ task Bird (y, speed) :Rect {
     var xx = (-WIN.x) / 2
     var yy = y
     var ang = 0
-    watching ,(xx > (WIN.x/2)) {
+    watching |(xx > (WIN.x/2)) {
         par {
             every :Pico.Frame {
                 val v = it.ms * speed
@@ -35,7 +35,7 @@ task Bird (y, speed) :Rect {
 
 spawn {
     val birds = tasks(5)
-    every :500:ms {
+    every <500:ms> {
         (spawn Bird(y,s) in birds) where {
             val y = -(WIN.y/2) + (random.next() % WIN.y)
             val s = 100 + (random.next() % 100)

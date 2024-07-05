@@ -37,7 +37,7 @@ spawn {
             val s = 100 + (10*i)
         }
     }
-    await(,false)
+    await(|false)
 }
 
 pico.loop()

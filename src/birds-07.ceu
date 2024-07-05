@@ -14,7 +14,7 @@ val WIN :XY = pico.state.get.size.window()
 task Bird (y, speed) :Rect {
     set pub = [[(-WIN.x)/2,y], [100,90]]
     var ang = 0
-    watching e1, (e1 is? :collided) or (pub.pos.x > (WIN.x/2)) {
+    watching e1 | (e1 is? :collided) or (pub.pos.x > (WIN.x/2)) {
         par {
             every e2 :Pico.Frame {
                 val v = e2.ms * speed
@@ -36,7 +36,7 @@ task Bird (y, speed) :Rect {
 spawn {
     val birds = tasks(5)
     par {
-        every :500:ms {
+        every <500:ms> {
             (spawn Bird(y,s) in birds) where {
                 val y = -(WIN.y/2) + (random.next() % WIN.y)
                 val s = 100 + (random.next() % 100)
@@ -54,7 +54,7 @@ spawn {
                         broadcast(:collided) in b1
                         broadcast(:collided) in b2
                     }
-                    break if col?
+                    until col?
                 }
             }
         }
