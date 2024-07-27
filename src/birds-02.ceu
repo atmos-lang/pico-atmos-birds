@@ -2,7 +2,6 @@
 
 pico.set.title       <- "Birds - 02 (scope)"
 pico.set.size        <- [640,480]
-pico.set.grid        <- false
 pico.set.color.clear <- [0,0,0,255]
 pico.set.color.draw  <- [255,255,255,255]
 
