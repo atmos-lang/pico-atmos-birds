@@ -1,28 +1,25 @@
 ^["@/pico/pico.ceu"]
 
-pico.state.set.title        <- "Birds - 10 (pause)"
-pico.state.set.size.window  <- [640,480]
-pico.state.set.size.pixel   <- [1,1]
-pico.state.set.grid         <- false
-pico.state.set.color.clear  <- [0,0,0,255]
-pico.state.set.color.draw   <- [255,255,255,255]
+pico.set.size([640,480], [640,480])
+pico.set.title        <- "Birds - 10 (pause)"
+pico.set.grid         <- false
+pico.set.color.clear  <- [0,0,0,255]
+pico.set.color.draw   <- [255,255,255,255]
 
 random.seed()
-
-val WIN :XY = pico.state.get.size.window()
 
 data :Bird = [alive,rect:Rect]
 
 task Bird (y, speed) :Bird {
-    set pub = [true, [[(-WIN.x)/2,y], [100,90]]]
+    set pub = [true, [[0,y], [100,90]]]
     var ang = 0
-    watching |(pub.rect.pos.x > (WIN.x/2)) {
+    watching |(pub.rect.pos.x > 640) {
         watching :collided {
             par {
                 every :Pico.Frame {
                     val v = it.ms * speed
                     set pub.rect.pos.x = pub.rect.pos.x + (v/1000)
-                    set pub.rect.pos.y = y + ((speed/5) * math.sin(ang))
+                    set pub.rect.pos.y = y - ((speed/5) * math.sin(ang))
                     set ang = ang + ((3.14*v)/100000)
                 }
             } with {
@@ -34,10 +31,10 @@ task Bird (y, speed) :Bird {
             }
         }
         set pub.alive = false
-        watching |(pub.rect.pos.y < -((WIN.y/2) - 45)) {
+        watching |(pub.rect.pos.y > (480-50)) {
             par {
                 every :Pico.Frame {
-                    set pub.rect.pos.y = pub.rect.pos.y - (it.ms * 0.5)
+                    set pub.rect.pos.y = pub.rect.pos.y + (it.ms * 0.5)
                 }
             } with {
                 every :Pico.Draw {
@@ -66,7 +63,7 @@ spawn {
             par {
                 every <500:ms> {
                     (spawn Bird(y,s) in birds) where {
-                        val y = -(WIN.y/2) + (random.next() % WIN.y)
+                        val y = random.next() % 480
                         val s = 100 + (random.next() % 100)
                     }
                 }
@@ -88,12 +85,13 @@ spawn {
             }
         }
     } with {
+        val cnt = pico.pct-to-pos(0.5,0.5)
         loop {
             await (:Pico.Key.Dn | it.key==:Key-P)
             broadcast (:Show [false]) in :global
             watching (:Pico.Key.Dn | it.key==:Key-P) {
                 every :Pico.Draw {
-                    pico.output.draw.image([0,0], "res/pause.png");
+                    pico.output.draw.image(cnt, "res/pause.png");
                 }
             }
             broadcast (:Show [true]) in :global
