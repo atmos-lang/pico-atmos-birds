@@ -72,8 +72,8 @@ spawn {
                     loop b1 in birds {
                         loop b2 in birds {
                             val col? = do {
-                                val p1 :Bird = b1.pub
-                                val p2 :Bird = b2.pub
+                                val' p1 :Bird = b1.pub
+                                val' p2 :Bird = b2.pub
                                 (b1 /= b2) and
                                 (p1.alive) and
                                 (p2.alive) and

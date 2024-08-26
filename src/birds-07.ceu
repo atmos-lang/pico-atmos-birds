@@ -41,11 +41,8 @@ spawn {
     } with {
         every :Pico.Frame {
             loop b1 in birds {
-                val pub1 = b1.pub
                 loop b2 in birds {
-;;println(status(b1), pub(b1), status(b2), pub(b2))
-                    val pub2 = b2.pub
-                    val col? = (b1/=b2) and pico.rect-vs-rect?(pub1,pub2)
+                    val col? = (b1/=b2) and pico.rect-vs-rect?(b1.pub,b2.pub)
                     if col? {
                         broadcast(:collided) in b1
                         broadcast(:collided) in b2
