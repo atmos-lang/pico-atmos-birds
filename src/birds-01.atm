@@ -1,0 +1,91 @@
+;;LUA_PATH="/x/atmos/atmos/src/?.lua;" lua5.4 /x/atmos/atmos/src/atmos.lua birds-01.atm
+
+val SDL = require "SDL"
+val IMG = require "SDL.image"
+
+defer {
+    IMG.quit()
+    SDL.quit()
+}
+
+val WIN = SDL.createWindow @{
+	title  = "Birds - 01 (task)",
+	width  = 640,
+	height = 480,
+    flags  = @{ SDL.flags.OpenGL },
+} -> assert
+val REN = SDL.createRenderer(WIN,-1) -> assert
+
+val UP = ren where {
+    sfc = IMG.load("res/bird-up.png") -> assert
+    ren = REN::createTextureFromSurface(sfc) -> assert
+}
+val DN = ren where {
+    sfc = IMG.load("res/bird-dn.png") -> assert
+    ren = REN::createTextureFromSurface(sfc) -> assert
+}
+val _,_,W,H = UP::query()
+
+func Bird (y, speed) {
+    var xx  = 0
+    var yy  = y
+    var img = DN
+    par {
+        var ang = 0
+        every :Pico.Frame {
+            val v = evt * speed
+            set xx = xx + (v/1000)
+            set yy = y - ((speed/5) * math.sin(ang))
+            set ang = ang + ((3.14*v)/100000)
+            val tmp = math.floor(((ang+(3.14/2))/3.14))
+            set img = match tmp % 2 {
+                0 => UP
+                1 => DN
+            }
+        }
+    } with {
+        every :Pico.Draw {
+            REN::copy(img, nil, @{x=xx->math.floor,y=yy->math.floor,w=W,h=H})
+        }
+    }
+}
+
+spawn {
+    every :Pico.Draw {
+        REN::setDrawColor(0x000000)
+        REN::clear()
+    }
+}
+spawn Bird (150, 100)
+spawn Bird (350, 200)
+spawn {
+    every :Pico.Draw {
+        REN::present()
+    }
+}
+
+val MS_PER_FRAME = 40
+var old = SDL.getTicks() - MS_PER_FRAME
+var ms = 0
+loop {
+	val e = SDL.waitEvent(ms)
+    if e == nil {
+        val cur = SDL.getTicks()
+        if (cur - old) >= MS_PER_FRAME {
+            set old = cur
+            emit(:Pico.Frame, MS_PER_FRAME)
+        }
+    } else {
+        match e.type {
+            SDL.event.Quit            => break()
+            SDL.event.MouseButtonUp   => emit(:Pico.Mouse.Button.Up(e))
+            SDL.event.MouseButtonDown => emit(:Pico.Mouse.Button.Dn(e))
+            SDL.event.MouseMotion     => emit(:Pico.Mouse.Motion(e))
+            SDL.event.KeyDown => {
+                set e.name = SDL.getKeyName(e.keysym.sym)
+                emit(:Pico.Key.Dn(e))
+            }
+        }
+    }
+    emit(:Pico.Draw)
+}
