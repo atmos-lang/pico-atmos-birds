@@ -1,4 +1,4 @@
-;;LUA_PATH="/x/atmos/atmos/src/?.lua;" lua5.4 /x/atmos/atmos/src/atmos.lua birds-08.atm
+;;LUA_PATH="/x/atmos/atmos/src/?.lua;" lua5.4 /x/atmos/atmos/src/atmos.lua birds-09.atm
 
 val SDL = require "SDL"
 val IMG = require "SDL.image"
@@ -9,7 +9,7 @@ defer {
 }
 
 val WIN = SDL.createWindow @{
-	title  = "Birds - 08 (fall)",
+	title  = "Birds - 09 (blink)",
 	width  = 640,
 	height = 480,
     flags  = @{ SDL.flags.OpenGL },
@@ -53,7 +53,7 @@ func Bird (y, speed) {
             }
         }
         set pub.alive = false
-        watching true, (pub.rect.y > (480-(H/2))) {
+        watching true, (pub.rect.y > (480-H)) {
             par {
                 every :Pico.Frame {
                     set pub.rect.y = pub.rect.y + (evt * 0.5)
@@ -61,6 +61,16 @@ func Bird (y, speed) {
             } with {
                 every :Pico.Draw {
                     REN::copy(DN, nil, pub.rect)
+                }
+            }
+        }
+        watching @1 {
+            loop {
+                await(@.100)
+                watching @.100 {
+                    every :Pico.Draw {
+                        REN::copy(DN, nil, pub.rect)
+                    }
                 }
             }
         }
