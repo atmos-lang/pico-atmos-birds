@@ -129,10 +129,14 @@ spawn {
                 }
             }
             watching bird {
-                ;;val pos = pico.pct-to-pos(0.5, 1)
+                val l = @{
+                    x1=640/2, y1=480,
+                }
                 every :Pico.Draw {
-                    print :Track
-                    ;;pico.output.draw.line(pos, bird.pub.rect.pos)
+                    set l.x2 = bird.pub.rect.x + (W/2)
+                    set l.y2 = bird.pub.rect.y + (H/2)
+                    REN::setDrawColor(0xFFFFFFFF)
+                    REN::drawLine(l)
                 }
             }
         }
