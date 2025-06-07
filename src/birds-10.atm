@@ -1,0 +1,172 @@
+;;LUA_PATH="/x/atmos/atmos/src/?.lua;" lua5.4 /x/atmos/atmos/src/atmos.lua birds-10.atm
+
+val SDL = require "SDL"
+val IMG = require "SDL.image"
+
+defer {
+    IMG.quit()
+    SDL.quit()
+}
+
+val WIN = SDL.createWindow @{
+	title  = "Birds - 10 (tracking)",
+	width  = 640,
+	height = 480,
+    flags  = @{ SDL.flags.OpenGL },
+} -> assert
+val REN = SDL.createRenderer(WIN,-1) -> assert
+
+val UP = ren where {
+    sfc = IMG.load("res/bird-up.png") -> assert
+    ren = REN::createTextureFromSurface(sfc) -> assert
+}
+val DN = ren where {
+    sfc = IMG.load("res/bird-dn.png") -> assert
+    ren = REN::createTextureFromSurface(sfc) -> assert
+}
+val _,_,W,H = UP::query()
+
+math.randomseed()
+
+func point_vs_rect (p, r) {
+    set p = copy(p)
+    set p.w = 1
+    set p.h = 1
+    SDL.hasIntersection(r, p)
+}
+
+func Bird (y, speed) {
+    set pub = @{alive=true, rect=@{x=0,y=y,w=W,h=H}}
+    var img = DN
+    watching true, (pub.rect.x>640) {
+        watching :collided {
+            par {
+                var ang = 0
+                every :Pico.Frame {
+                    val v = evt * speed
+                    set pub.rect.x = pub.rect.x + (v/1000) --> math.floor
+                    set pub.rect.y = y - ((speed/5) * math.sin(ang)) --> math.floor
+                    set ang = ang + ((3.14*v)/100000)
+                    val tmp = (ang + (3.14/2)) / 3.14 --> math.floor
+                    set img = match tmp % 2 {
+                        0 => UP
+                        1 => DN
+                    }
+                }
+            } with {
+                every :Pico.Draw {
+                    REN::copy(img, nil, pub.rect)
+                }
+            }
+        }
+        set pub.alive = false
+        watching true, (pub.rect.y > (480-H)) {
+            par {
+                every :Pico.Frame {
+                    set pub.rect.y = pub.rect.y + (evt * 0.5)
+                }
+            } with {
+                every :Pico.Draw {
+                    REN::copy(DN, nil, pub.rect)
+                }
+            }
+        }
+        watching @1 {
+            loop {
+                await(@.100)
+                watching @.100 {
+                    every :Pico.Draw {
+                        REN::copy(DN, nil, pub.rect)
+                    }
+                }
+            }
+        }
+    }
+}
+
+spawn {
+    every :Pico.Draw {
+        REN::setDrawColor(0x000000)
+        REN::clear()
+    }
+}
+spawn {
+    pin birds = tasks(5)
+    par {
+        every @.500 {
+            spawn [birds] Bird (y,s) where {
+                y = math.random(0, 480)
+                s = 100 + math.random(0, 100)
+            }
+        }
+    } with {
+        every :Pico.Frame {
+            loop b1 in birds {
+                loop b2 in birds {
+                    val col = ifs {
+                        (b1 == b2) => false
+                        !b1.alive  => false
+                        !b2.alive  => false
+                        else       => SDL.hasIntersection(b1.pub.rect,b2.pub.rect)
+                    }
+                    if col {
+                        emit [b1] :collided
+                        emit [b2] :collided
+                        break()
+                    }
+                }
+            }
+        }
+    } with {
+        loop {
+            val bird = do :Track {
+                every :Pico.Mouse.Button.Dn {
+                    loop b in birds {
+                        if b.pub.alive && point_vs_rect(evt,b.pub.rect) {
+                            escape(:Track,b)
+                        }
+                    }
+                }
+            }
+            watching bird {
+                ;;val pos = pico.pct-to-pos(0.5, 1)
+                every :Pico.Draw {
+                    print :Track
+                    ;;pico.output.draw.line(pos, bird.pub.rect.pos)
+                }
+            }
+        }
+    }
+}
+spawn {
+    every :Pico.Draw {
+        REN::present()
+    }
+}
+
+val MS_PER_FRAME = 40
+var old = SDL.getTicks() - MS_PER_FRAME
+var ms = 0
+loop {
+	val e = SDL.waitEvent(ms)
+    if e == nil {
+        val cur = SDL.getTicks()
+        if (cur - old) >= MS_PER_FRAME {
+            set old = cur
+            emit(:clock, MS_PER_FRAME)
+            emit(:Pico.Frame, MS_PER_FRAME)
+        }
+    } else {
+        match e.type {
+            SDL.event.Quit            => break()
+            SDL.event.MouseButtonUp   => emit(:Pico.Mouse.Button.Up(e))
+            SDL.event.MouseButtonDown => emit(:Pico.Mouse.Button.Dn(e))
+            SDL.event.MouseMotion     => emit(:Pico.Mouse.Motion(e))
+            SDL.event.KeyDown => {
+                set e.name = SDL.getKeyName(e.keysym.sym)
+                emit(:Pico.Key.Dn(e))
+            }
+        }
+    }
+    emit(:Pico.Draw)
+}
