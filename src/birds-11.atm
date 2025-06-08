@@ -106,10 +106,10 @@ spawn {
                     loop b1 in birds {
                         loop b2 in birds {
                             val col = ifs {
-                                (b1 == b2) => false
-                                !b1.alive  => false
-                                !b2.alive  => false
-                                else       => SDL.hasIntersection(b1.pub.rect,b2.pub.rect)
+                                (b1 == b2)    => false
+                                !b1.pub.alive => false
+                                !b2.pub.alive => false
+                                else          => SDL.hasIntersection(b1.pub.rect,b2.pub.rect)
                             }
                             if col {
                                 emit [b1] :collided
