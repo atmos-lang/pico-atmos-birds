@@ -1,4 +1,4 @@
-;;LUA_PATH="/x/atmos/src/?.lua;" lua5.4 /x/atmos/src/atmos.lua birds-01.atm
+;;LUA_PATH="/x/atmos/atmos/src/?.lua;" lua5.4 /x/atmos/atmos/src/atmos.lua birds-11.atm
 
 val SDL = require "SDL"
 val IMG = require "SDL.image"
@@ -9,45 +9,45 @@ defer {
 }
 
 val WIN = SDL.createWindow @{
-	title  = "Birds - 11 (tracking)",
+	title  = "Birds - 11 (pause)",
 	width  = 640,
 	height = 480,
     flags  = @{ SDL.flags.OpenGL },
 } -> assert
 val REN = SDL.createRenderer(WIN,-1) -> assert
 
-val UP = ren where {
+val UP = tex where {
     sfc = IMG.load("res/bird-up.png") -> assert
-    ren = REN::createTextureFromSurface(sfc) -> assert
+    tex = REN::createTextureFromSurface(sfc) -> assert
 }
-val DN = ren where {
+val DN = tex where {
     sfc = IMG.load("res/bird-dn.png") -> assert
-    ren = REN::createTextureFromSurface(sfc) -> assert
+    tex = REN::createTextureFromSurface(sfc) -> assert
 }
 val _,_,W,H = UP::query()
 
-func rect_vs_pos (r, p) {
+math.randomseed()
+
+func point_vs_rect (p, r) {
     set p = copy(p)
     set p.w = 1
     set p.h = 1
     SDL.hasIntersection(r, p)
 }
 
-math.randomseed()
-
 func Bird (y, speed) {
     set pub = @{alive=true, rect=@{x=0,y=y,w=W,h=H}}
     var img = DN
-    watching true, (pub.rect.x > 640) {
+    watching true, (pub.rect.x>640) {
         watching :collided {
             par {
                 var ang = 0
                 every :Pico.Frame {
                     val v = evt * speed
-                    set pub.rect.x = pub.rect.x + (v/1000)
-                    set pub.rect.y = pub.rect.y - ((speed/5) * math.sin(ang)) --> math.floor
+                    set pub.rect.x = pub.rect.x + (v/1000) --> math.floor
+                    set pub.rect.y = y - ((speed/5) * math.sin(ang)) --> math.floor
                     set ang = ang + ((3.14*v)/100000)
-                    val tmp = math.floor(((ang+(3.14/2))/3.14))
+                    val tmp = (ang + (3.14/2)) / 3.14 --> math.floor
                     set img = match tmp % 2 {
                         0 => UP
                         1 => DN
@@ -60,15 +60,14 @@ func Bird (y, speed) {
             }
         }
         set pub.alive = false
-        watching true, (pub.rect.y > 480) {
+        watching true, (pub.rect.y > (480-H)) {
             par {
                 every :Pico.Frame {
-                    set pub.rect.y = pub.rect.y + (it.ms * 0.5)
+                    set pub.rect.y = pub.rect.y + (evt * 0.5)
                 }
             } with {
-                set img = DN
                 every :Pico.Draw {
-                    REN::copy(img, nil, pub.rect)
+                    REN::copy(DN, nil, pub.rect)
                 }
             }
         }
@@ -77,89 +76,101 @@ func Bird (y, speed) {
                 await(@.100)
                 watching @.100 {
                     every :Pico.Draw {
-                        REN::copy(img, nil, pub.rect)
+                        REN::copy(DN, nil, pub.rect)
                     }
                 }
             }
         }
     }
-    pub
 }
 
 spawn {
+    every :Pico.Draw {
+        REN::setDrawColor(0x000000)
+        REN::clear()
+    }
+}
+spawn {
     par {
-        every :Pico.Draw {
-            REN::setDrawColor(0x000000)
-            REN::clear()
-        }
-    } with {
-        ;;toggle :Show {
+        toggle :Show {
             pin birds = tasks(5)
             par {
                 every @.500 {
-                    spawn [birds] Bird(y,s) where {
-                        y = math.random(0,480)
-                        s = 100 + math.random(0,100)
+                    spawn [birds] Bird (y,s) where {
+                        y = math.random(0, 480)
+                        s = 100 + math.random(0, 100)
                     }
                 }
             } with {
                 every :Pico.Frame {
                     loop b1 in birds {
                         loop b2 in birds {
-                            val col = do {
-                                val p1 = b1.pub
-                                val p2 = b2.pub
-                                (b1 != b2) &&
-                                (p1.alive) &&
-                                (p2.alive) &&
-                                SDL.hasIntersection(p1.rect, p2.rect)
+                            val col = ifs {
+                                (b1 == b2) => false
+                                !b1.alive  => false
+                                !b2.alive  => false
+                                else       => SDL.hasIntersection(b1.pub.rect,b2.pub.rect)
                             }
                             if col {
-                                emit [b1] <- :collided
-                                emit [b2] <- :collided
+                                emit [b1] :collided
+                                emit [b2] :collided
+                                break()
                             }
-                            until (col)
                         }
                     }
                 }
             } with {
                 loop {
-                    val bird = (
+                    val bird = do :Track {
                         every :Pico.Mouse.Button.Dn {
-                            until (
-                                loop b in birds {
-                                    until (b.pub.alive && rect_vs_pos(b.pub.rect,evt) && b)
+                            loop b in birds {
+                                if b.pub.alive && point_vs_rect(evt,b.pub.rect) {
+                                    escape(:Track,b)
                                 }
-                            )
+                            }
                         }
-                    )
+                    }
                     watching bird {
-                        val pos = pico.pct-to-pos(0.5, 1)
+                        val l = @{
+                            x1=640/2, y1=480,
+                        }
                         every :Pico.Draw {
-                            pico.output.draw.line(pos, bird.pub.rect.pos)
+                            set l.x2 = bird.pub.rect.x + (W/2)
+                            set l.y2 = bird.pub.rect.y + (H/2)
+                            REN::setDrawColor(0xFFFFFFFF)
+                            REN::drawLine(l)
                         }
                     }
                 }
             }
-        ;;}
+        }
     } with {
-        ;;;
-        val cnt = pico.pct-to-pos(0.5,0.5)
         loop {
-            await (:Pico.Key.Dn, evt.key==:Key-P)
-            broadcast (:Show [false]) in :global
-            watching (:Pico.Key.Dn | it.key==:Key-P) {
+            await(:Pico.Key.Dn, evt.name=='P')
+            emit(:Show, false)
+            watching :Pico.Key.Dn, evt.name=='P' {
+                val img = tex where {
+                    sfc = IMG.load("res/pause.png") -> assert
+                    tex = REN::createTextureFromSurface(sfc) -> assert
+                }
+                val _,_,w,h = img::query()
+                val r = @{
+                    x = (640/2) - (w/2) --> math.floor,
+                    y = (480/2) - (h/2) --> math.floor,
+                    w=w, h=h
+                }
                 every :Pico.Draw {
-                    pico.output.draw.image(cnt, "res/pause.png");
+                    REN::copy(img, nil, r)
                 }
             }
-            broadcast (:Show [true]) in :global
+            emit(:Show, true)
         }
-        ;;;
-    } with {
-        every :Pico.Draw {
-            REN::present()
-        }
+
+    }
+}
+spawn {
+    every :Pico.Draw {
+        REN::present()
     }
 }
 
